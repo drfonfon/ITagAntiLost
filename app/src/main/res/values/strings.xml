@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">ITagAntiLost</string>
+    <string name="ble_not_supported">Sorry Bluetooth LE is not supported on your device</string>
+    <string name="select_device">Select device</string>
 </resources>
