@@ -38,6 +38,7 @@ public class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> 
         ScanResult result = dev.get(position);
         String name = result.getScanRecord().getDeviceName() != null ? result.getScanRecord().getDeviceName() : result.getDevice().getAddress();
         holder.binding.setName(name);
+        holder.binding.setMac(result.getDevice().getAddress());
     }
 
     @Override
@@ -62,7 +63,7 @@ public class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> 
         public Holder(LayoutDeviceBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
-            binding.getRoot().setOnClickListener(this);
+            binding.fabAction.setOnClickListener(this);
         }
 
         @Override

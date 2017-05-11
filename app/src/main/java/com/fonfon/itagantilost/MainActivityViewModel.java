@@ -8,9 +8,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
+import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Toast;
+
+import java.util.List;
 
 public class MainActivityViewModel extends ScanCallback implements DevicesAdapter.Listener {
 
@@ -80,16 +83,30 @@ public class MainActivityViewModel extends ScanCallback implements DevicesAdapte
 
     @Override
     public void onScanResult(int callbackType, ScanResult result) {
-        dataListener.onDevice(result);
+        try {
+            List<ParcelUuid> uuids = result.getScanRecord().getServiceUuids();
+            if (uuids != null) {
+                for (ParcelUuid uuid : uuids) {
+                    if (uuid.getUuid().equals(BleConstants.FIND_ME_SERVICE)) {
+                        dataListener.onDevice(result);
+                        break;
+                    }
+                }
+            }
+        } catch (NullPointerException ignored) {
+
+        }
     }
 
     @Override
     public void onDevice(ScanResult result) {
-        activity.startActivity(new Intent(activity, DetailActivity.class).putExtra("device", result));
+        App.add(result);
+        activity.startService(new Intent(activity, BleService.class));
     }
 
     public interface DataListener {
         void onDevice(ScanResult scanResult);
+
         void clear();
     }
 }

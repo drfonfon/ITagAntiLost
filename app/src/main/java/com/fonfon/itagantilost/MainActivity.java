@@ -29,12 +29,14 @@ public class MainActivity extends AppCompatActivity implements MainActivityViewM
     protected void onResume() {
         super.onResume();
         model.resume();
+        startService(new Intent(MainActivity.this, BleService.class));
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         model.pause();
+        stopService(new Intent(MainActivity.this, BleService.class));
     }
 
     @Override
