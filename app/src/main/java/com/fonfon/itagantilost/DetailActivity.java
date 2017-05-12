@@ -18,6 +18,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.fonfon.itagantilost.lib.BleConstants;
+
 import java.util.UUID;
 
 public class DetailActivity extends AppCompatActivity {

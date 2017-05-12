@@ -3,18 +3,20 @@ package com.fonfon.itagantilost;
 import android.app.Application;
 import android.bluetooth.le.ScanResult;
 
-import java.util.ArrayList;
+import com.fonfon.itagantilost.ui.Device;
+
+import java.util.HashMap;
 
 public class App extends Application {
 
-    private static ArrayList<ScanResult> scanResults = new ArrayList<>();
+    private static HashMap<String, Device> devices = new HashMap<>();
 
-    public static void add(ScanResult scanResult) {
-        scanResults.add(scanResult);
+    public static void addDevice(ScanResult scanResult) {
+        devices.put(scanResult.getDevice().getAddress(), new Device(scanResult));
     }
 
-    public static ArrayList<ScanResult> getScanResults() {
-        return scanResults;
+    public static HashMap<String, Device> getDevices() {
+        return devices;
     }
 
     @Override

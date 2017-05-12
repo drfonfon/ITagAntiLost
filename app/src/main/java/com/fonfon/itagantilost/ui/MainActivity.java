@@ -1,13 +1,14 @@
-package com.fonfon.itagantilost;
+package com.fonfon.itagantilost.ui;
 
-import android.bluetooth.le.ScanResult;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 
+import com.fonfon.itagantilost.R;
 import com.fonfon.itagantilost.databinding.ActivityMainBinding;
+import com.fonfon.itagantilost.lib.BleService;
 
 public class MainActivity extends AppCompatActivity implements MainActivityViewModel.DataListener {
 
@@ -22,6 +23,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityViewM
         binding.setModel(model);
         binding.recycler.setLayoutManager(new LinearLayoutManager(this));
         binding.recycler.setAdapter(new DevicesAdapter(model));
+        binding.refresh.setOnRefreshListener(model);
         model.init();
     }
 
@@ -52,12 +54,12 @@ public class MainActivity extends AppCompatActivity implements MainActivityViewM
     }
 
     @Override
-    public void onDevice(ScanResult scanResult) {
-        ((DevicesAdapter) binding.recycler.getAdapter()).add(scanResult);
+    public void notifyAdapter() {
+        binding.recycler.getAdapter().notifyDataSetChanged();
     }
 
     @Override
-    public void clear() {
-        ((DevicesAdapter)binding.recycler.getAdapter()).clear();
+    public void setRefreshing(Boolean refreshing) {
+        binding.refresh.setRefreshing(refreshing);
     }
 }

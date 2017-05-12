@@ -3,30 +3,30 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
+
         <variable
             name="model"
-            type="com.fonfon.itagantilost.MainActivityViewModel"/>
+            type="com.fonfon.itagantilost.ui.MainActivityViewModel" />
     </data>
 
-    <android.support.design.widget.CoordinatorLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recycler"
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/refresh"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="0dp"
+            android:layout_weight="1">
 
-        <android.support.design.widget.FloatingActionButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_gravity="bottom|end"
-            app:srcCompat = "@drawable/ic_loupe"
-            app:backgroundTint="@android:color/white"
-            android:onClick="@{model::search}"/>
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recycler"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
 
-    </android.support.design.widget.CoordinatorLayout>
+        </android.support.v4.widget.SwipeRefreshLayout>
+
+    </LinearLayout>
 
 </layout>

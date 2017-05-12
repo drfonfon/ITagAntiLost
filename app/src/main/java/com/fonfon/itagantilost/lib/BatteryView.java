@@ -1,6 +1,8 @@
-package com.fonfon.itagantilost;
+package com.fonfon.itagantilost.lib;
 
 import android.content.Context;
+import android.databinding.BindingMethod;
+import android.databinding.BindingMethods;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -9,9 +11,12 @@ import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.fonfon.itagantilost.R;
+
+@BindingMethods(@BindingMethod(type = BatteryView.class, attribute = "level", method = "setLevel"))
 public class BatteryView extends View {
 
-    private int level = 100;
+    private byte level = 100;
     private static final int warningLevel = 35;
     private Paint mTextValuePaint;
     private Paint mMainRectStrokePaint;
@@ -112,7 +117,7 @@ public class BatteryView extends View {
         return level;
     }
 
-    public void setLevel(int mLevel) {
+    public void setLevel(byte mLevel) {
         if (mLevel > 100) mLevel = 100;
         if (mLevel < 0) mLevel = 0;
         this.level = mLevel;

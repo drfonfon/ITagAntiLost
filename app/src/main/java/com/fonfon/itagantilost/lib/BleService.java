@@ -1,4 +1,4 @@
-package com.fonfon.itagantilost;
+package com.fonfon.itagantilost.lib;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -17,6 +17,11 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+
+import com.fonfon.itagantilost.App;
+import com.fonfon.itagantilost.R;
+import com.fonfon.itagantilost.ui.Device;
+import com.fonfon.itagantilost.ui.MainActivity;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -40,20 +45,20 @@ public class BleService extends Service {
             if (BluetoothGatt.GATT_SUCCESS == status) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     gatt.discoverServices();
-                    Log.d("debug", "connected");
+                    App.getDevices().get(gatt.getDevice().getAddress()).isConnected = true;
+                    sendBroadcast(new Intent("bleUpdated"));
                 }
 
                 if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     gatt.close();
-                    Log.d("debug", "disconnected");
+                    App.getDevices().get(gatt.getDevice().getAddress()).isConnected = false;
+                    sendBroadcast(new Intent("bleUpdated"));
                 }
             }
         }
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            Log.d("debug", "onServicesDiscovered");
-
             for (BluetoothGattService service : gatt.getServices()) {
                 if (BleConstants.IMMEDIATE_ALERT_SERVICE.equals(service.getUuid())) {
                     immediateAlertService = service;
@@ -78,26 +83,25 @@ public class BleService extends Service {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
-            Log.d("debug", "onCharacteristicRead");
 
             if (characteristic.getValue() != null && characteristic.getValue().length > 0) {
                 final byte level = characteristic.getValue()[0];
-                //textView.setText(String.valueOf(level));
+                App.getDevices().get(gatt.getDevice().getAddress()).batteryLevel = level;
+                sendBroadcast(new Intent("bleUpdated"));
             }
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
-            //Toast.makeText(getApplicationContext(), "onCharacteristicChanged", Toast.LENGTH_SHORT).show();
-            Log.d("debug", "ONCLICK: " + gatt.getDevice().getAddress());
+            App.getDevices().get(gatt.getDevice().getAddress()).isClicked = !App.getDevices().get(gatt.getDevice().getAddress()).isClicked;
+            sendBroadcast(new Intent("bleUpdated"));
         }
 
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorWrite(gatt, descriptor, status);
             gatt.readCharacteristic(batteryCharacteristic);
-            Log.d("debug", "onDescriptorWrite");
         }
     };
 
@@ -112,7 +116,20 @@ public class BleService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        connect();
+        String action = intent.getAction();
+        Device device = intent.getParcelableExtra("device");
+        if (action != null && device != null) {
+            Log.d("debug", action);
+            if ("connect".equals(action)) {
+                connect(device.scanResult);
+            }
+            if ("startAlarm".equals(action)) {
+                immediateAlert(device.address, 2);
+            }
+            if ("stopAlarm".equals(action)) {
+                immediateAlert(device.address, 0);
+            }
+        }
         return START_STICKY;
     }
 
@@ -139,14 +156,6 @@ public class BleService extends Service {
                 .setContentIntent(resultPendingIntent).build();
     }
 
-    public void connect() {
-        for (ScanResult scanResult: App.getScanResults()) {
-            if(!bluetoothGatt.containsKey(scanResult.getDevice().getAddress())) {
-                connect(scanResult);
-            }
-        }
-    }
-
     public boolean connect(ScanResult result) {
         if (bluetoothAdapter == null) {
             return false;
@@ -160,7 +169,7 @@ public class BleService extends Service {
         if (bluetoothAdapter == null) {
             return;
         }
-        for (BluetoothGatt gatt: bluetoothGatt.values()) {
+        for (BluetoothGatt gatt : bluetoothGatt.values()) {
             gatt.disconnect();
         }
     }

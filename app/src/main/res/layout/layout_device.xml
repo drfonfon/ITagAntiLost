@@ -6,12 +6,8 @@
     <data>
 
         <variable
-            name="name"
-            type="String" />
-
-        <variable
-            name="mac"
-            type="String" />
+            name="device"
+            type="com.fonfon.itagantilost.ui.Device" />
     </data>
 
     <LinearLayout
@@ -24,11 +20,12 @@
         android:paddingStart="8sp"
         android:paddingTop="8dp">
 
-        <com.fonfon.itagantilost.BatteryView
+        <com.fonfon.itagantilost.lib.BatteryView
             android:layout_width="48dp"
             android:layout_height="24dp"
             android:layout_gravity="center"
-            android:layout_margin="8dp" />
+            android:layout_margin="8dp"
+            app:level="@{device.batteryLevel}" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -44,7 +41,7 @@
                 android:paddingRight="8dp"
                 android:paddingStart="8dp"
                 android:paddingTop="8dp"
-                android:text="@{name}"
+                android:text="@{device.name}"
                 android:textColor="@android:color/black"
                 android:textSize="16sp"
                 android:textStyle="bold"
@@ -57,7 +54,7 @@
                 android:paddingLeft="8dp"
                 android:paddingRight="8dp"
                 android:paddingStart="8dp"
-                android:text="@{mac}"
+                android:text="@{device.address}"
                 android:textSize="12sp"
                 tools:text="AA:BB:CC:DD:EE:FF" />
 
@@ -69,6 +66,7 @@
             android:layout_weight="1" />
 
         <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/click"
             android:layout_width="16dp"
             android:layout_height="16dp"
             android:layout_gravity="center"
@@ -77,7 +75,7 @@
             android:layout_marginRight="4dp"
             android:layout_marginStart="4dp"
             android:background="@drawable/selector_click"
-            android:enabled="false" />
+            android:enabled="@{device.isClicked}" />
 
         <Space
             android:layout_width="0dp"
@@ -89,9 +87,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:src="@drawable/ic_link"
-            app:backgroundTint="@android:color/white"
-            app:fabSize="mini" />
+            android:src="@{device.isConnected ? @drawable/ic_bell : @drawable/ic_link}"
+            app:fabSize="mini"
+            app:isAlarm="@{device.isAlarmed}" />
 
     </LinearLayout>
 </layout>
