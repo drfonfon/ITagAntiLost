@@ -1,4 +1,4 @@
-package com.fonfon.itagantilost;
+package com.fonfon.noloss;
 
 import org.junit.Test;
 

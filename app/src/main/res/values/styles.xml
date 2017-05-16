@@ -4,7 +4,7 @@
         <item name="colorPrimary">@color/mariner</item>
         <item name="colorPrimaryDark">@color/resolution_blue</item>
         <item name="colorAccent">@color/mojo</item>
-        <item name="android:windowBackground">@color/mystic</item>
+        <item name="android:navigationBarColor">@color/resolution_blue</item>
     </style>
 
 </resources>

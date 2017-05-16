@@ -1,4 +1,4 @@
-package com.fonfon.itagantilost.lib;
+package com.fonfon.noloss.ui;
 
 import android.content.Context;
 import android.databinding.BindingMethod;
@@ -11,7 +11,7 @@ import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.fonfon.itagantilost.R;
+import com.fonfon.noloss.R;
 
 @BindingMethods(@BindingMethod(type = BatteryView.class, attribute = "level", method = "setLevel"))
 public class BatteryView extends View {

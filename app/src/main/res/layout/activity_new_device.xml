@@ -5,9 +5,6 @@
 
     <data>
 
-        <variable
-            name="model"
-            type="com.fonfon.noloss.ui.main.MainActivityViewModel" />
     </data>
 
     <android.support.design.widget.CoordinatorLayout
@@ -25,25 +22,36 @@
                 android:layout_width="match_parent"
                 android:layout_height="?android:actionBarSize"
                 android:background="@color/mariner"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-                app:title="@string/app_name" />
+                app:title="@string/select_device"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
         </android.support.design.widget.AppBarLayout>
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recycler"
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/refresh"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            tools:listitem="@layout/item_device" />
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <android.support.design.widget.FloatingActionButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="16dp"
-            android:onClick="@{model::search}"
-            android:src="@drawable/ic_search" />
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recycler"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:listitem="@layout/item_new_device" />
+
+        </android.support.v4.widget.SwipeRefreshLayout>
+
+        <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/empty_text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fontFamily="monospace"
+            android:gravity="center"
+            android:text="@string/devices_not_found"
+            android:textColor="@color/mystic"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
     </android.support.design.widget.CoordinatorLayout>
 

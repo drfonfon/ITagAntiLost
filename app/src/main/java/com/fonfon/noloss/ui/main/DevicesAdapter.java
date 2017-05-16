@@ -1,18 +1,12 @@
-package com.fonfon.itagantilost.ui;
+package com.fonfon.noloss.ui.main;
 
-import android.content.res.ColorStateList;
-import android.databinding.BindingAdapter;
-import android.graphics.Color;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.fonfon.itagantilost.App;
-import com.fonfon.itagantilost.R;
-import com.fonfon.itagantilost.databinding.LayoutDeviceBinding;
+import com.fonfon.noloss.App;
+import com.fonfon.noloss.databinding.ItemDeviceBinding;
 
 import java.util.ArrayList;
 
@@ -27,7 +21,7 @@ public class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> 
     @Override
     public Holder onCreateViewHolder(ViewGroup parent, int viewType) {
         return new Holder(
-                LayoutDeviceBinding.inflate(
+                ItemDeviceBinding.inflate(
                         LayoutInflater.from(parent.getContext()),
                         parent, false
                 )
@@ -46,28 +40,28 @@ public class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> 
 
     class Holder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        private final LayoutDeviceBinding binding;
+        private final ItemDeviceBinding binding;
 
-        public Holder(LayoutDeviceBinding binding) {
+        Holder(ItemDeviceBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
-            binding.fabAction.setOnClickListener(this);
+            this.binding.buttonAction.setOnClickListener(this);
+            this.binding.getRoot().setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    return true;
+                }
+            });
         }
 
         @Override
         public void onClick(View v) {
-            listener.onDevice(new ArrayList<>(App.getDevices().values()).get(getAdapterPosition()).address);
+            listener.onDevice(new ArrayList<>(App.getDevices().values()).get(getAdapterPosition()).getScanResult().getDevice().getAddress());
             notifyDataSetChanged();
         }
     }
 
-    public interface Listener {
+    interface Listener {
         void onDevice(String result);
-    }
-
-    @BindingAdapter({"isAlarm"})
-    public static void setSrcCompat(FloatingActionButton view, boolean isAlarm) {
-        int color = isAlarm ? ContextCompat.getColor(view.getContext(), R.color.mojo) : Color.WHITE;
-        view.setBackgroundTintList(ColorStateList.valueOf(color));
     }
 }

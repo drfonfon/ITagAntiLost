@@ -1,9 +1,9 @@
-package com.fonfon.itagantilost;
+package com.fonfon.noloss;
 
 import android.app.Application;
 import android.bluetooth.le.ScanResult;
 
-import com.fonfon.itagantilost.ui.Device;
+import com.fonfon.noloss.lib.Device;
 
 import java.util.HashMap;
 

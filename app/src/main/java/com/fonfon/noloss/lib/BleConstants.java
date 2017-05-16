@@ -1,4 +1,4 @@
-package com.fonfon.itagantilost.lib;
+package com.fonfon.noloss.lib;
 
 import java.util.UUID;
 

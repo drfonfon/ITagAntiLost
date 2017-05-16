@@ -1,4 +1,4 @@
-package com.fonfon.itagantilost;
+package com.fonfon.noloss;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

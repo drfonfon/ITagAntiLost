@@ -1,4 +1,4 @@
-package com.fonfon.itagantilost.ui;
+package com.fonfon.noloss.ui.main;
 
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
@@ -6,9 +6,10 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 
-import com.fonfon.itagantilost.R;
-import com.fonfon.itagantilost.databinding.ActivityMainBinding;
-import com.fonfon.itagantilost.lib.BleService;
+import com.fonfon.noloss.R;
+import com.fonfon.noloss.databinding.ActivityMainBinding;
+import com.fonfon.noloss.lib.BleService;
+import com.fonfon.noloss.ui.SwipeToDismissHelper;
 
 public class MainActivity extends AppCompatActivity implements MainActivityViewModel.DataListener {
 
@@ -23,7 +24,9 @@ public class MainActivity extends AppCompatActivity implements MainActivityViewM
         binding.setModel(model);
         binding.recycler.setLayoutManager(new LinearLayoutManager(this));
         binding.recycler.setAdapter(new DevicesAdapter(model));
-        binding.refresh.setOnRefreshListener(model);
+
+        SwipeToDismissHelper swipeToDismissHelper = new SwipeToDismissHelper(this, model);
+        swipeToDismissHelper.attachToRecyclerView(binding.recycler);
         model.init();
     }
 
@@ -56,10 +59,5 @@ public class MainActivity extends AppCompatActivity implements MainActivityViewM
     @Override
     public void notifyAdapter() {
         binding.recycler.getAdapter().notifyDataSetChanged();
-    }
-
-    @Override
-    public void setRefreshing(Boolean refreshing) {
-        binding.refresh.setRefreshing(refreshing);
     }
 }

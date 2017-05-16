@@ -1,8 +1,5 @@
-package com.fonfon.itagantilost.lib;
+package com.fonfon.noloss;
 
-import android.app.Notification;
-import android.app.PendingIntent;
-import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -13,31 +10,33 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
-import android.content.Intent;
-import android.os.IBinder;
-import android.support.v4.app.NotificationCompat;
+import android.os.Bundle;
+import android.os.Handler;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatTextView;
 import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
-import com.fonfon.itagantilost.App;
-import com.fonfon.itagantilost.R;
-import com.fonfon.itagantilost.ui.Device;
-import com.fonfon.itagantilost.ui.MainActivity;
+import com.fonfon.noloss.lib.BleConstants;
 
-import java.util.HashMap;
 import java.util.UUID;
 
-public class BleService extends Service {
-
-    public static final int NOTIFICATION_ID = 7007;
+public class DetailActivity extends AppCompatActivity {
 
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter bluetoothAdapter;
-    private HashMap<String, BluetoothGatt> bluetoothGatt = new HashMap<>();
+    private BluetoothGatt bluetoothGatt;
 
     private BluetoothGattCharacteristic buttonCharacteristic;
     private BluetoothGattService immediateAlertService;
     private BluetoothGattCharacteristic alertCharacteristic;
     private BluetoothGattCharacteristic batteryCharacteristic;
+
+    private Handler handler = new Handler();
+    private Runnable trackRemoteRssi = null;
+
+    private ScanResult result;
 
     private BluetoothGattCallback callback = new BluetoothGattCallback() {
         @Override
@@ -45,20 +44,21 @@ public class BleService extends Service {
             if (BluetoothGatt.GATT_SUCCESS == status) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     gatt.discoverServices();
-                    App.getDevices().get(gatt.getDevice().getAddress()).isConnected = true;
-                    sendBroadcast(new Intent("bleUpdated"));
+                    Log.d("debug", "connected");
                 }
 
                 if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     gatt.close();
-                    App.getDevices().get(gatt.getDevice().getAddress()).isConnected = false;
-                    sendBroadcast(new Intent("bleUpdated"));
+                    Log.d("debug", "disconnected");
                 }
             }
         }
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            launchTrackingRemoteRssi(gatt);
+            Log.d("debug", "onServicesDiscovered");
+
             for (BluetoothGattService service : gatt.getServices()) {
                 if (BleConstants.IMMEDIATE_ALERT_SERVICE.equals(service.getUuid())) {
                     immediateAlertService = service;
@@ -83,95 +83,127 @@ public class BleService extends Service {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
+            Log.d("debug", "onCharacteristicRead");
 
             if (characteristic.getValue() != null && characteristic.getValue().length > 0) {
                 final byte level = characteristic.getValue()[0];
-                App.getDevices().get(gatt.getDevice().getAddress()).batteryLevel = level;
-                sendBroadcast(new Intent("bleUpdated"));
+                textView.setText(String.valueOf(level));
             }
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicWrite(gatt, characteristic, status);
+            Log.d("debug", "onCharacteristicWrite");
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
-            App.getDevices().get(gatt.getDevice().getAddress()).isClicked = !App.getDevices().get(gatt.getDevice().getAddress()).isClicked;
-            sendBroadcast(new Intent("bleUpdated"));
+            Toast.makeText(getApplicationContext(), "onCharacteristicChanged", Toast.LENGTH_SHORT).show();
+            Log.d("debug", "onCharacteristicChanged");
         }
 
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorWrite(gatt, descriptor, status);
             gatt.readCharacteristic(batteryCharacteristic);
+            Log.d("debug", "onDescriptorWrite");
+        }
+
+        @Override
+        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+            super.onReadRemoteRssi(gatt, rssi, status);
+            Log.d("debug", "onReadRemoteRssi");
+
+            Log.d("debug", String.valueOf(getDistance(rssi, status)));
         }
     };
 
+    double getDistance(int rssi, int txPower) {
+    /*
+     * RSSI = TxPower - 10 * n * lg(d)
+     * n = 2 (in free space)
+     *
+     * d = 10 ^ ((TxPower - RSSI) / (10 * n))
+     */
+        return Math.pow(10d, ((double) txPower - rssi) / (10 * 2));
+    }
+
+    private int alertType = 0;
+    private AppCompatTextView textView;
+
     @Override
-    public void onCreate() {
-        super.onCreate();
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_detail);
+
+        result = getIntent().getParcelableExtra("device");
+        if (result == null) {
+            finish();
+        }
+
         if (!initialize()) {
-            //TODO
+            finish();
         }
-        startForeground(NOTIFICATION_ID, getNotification("Запуск сервиса"));
+
+        textView = (AppCompatTextView) findViewById(R.id.text);
+
+        findViewById(R.id.alert).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                immediateAlert(alertType);
+
+                if (alertType == 0) {
+                    alertType = 2;
+                } else {
+                    alertType = 0;
+                }
+            }
+        });
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        String action = intent.getAction();
-        Device device = intent.getParcelableExtra("device");
-        if (action != null && device != null) {
-            Log.d("debug", action);
-            if ("connect".equals(action)) {
-                connect(device.scanResult);
-            }
-            if ("startAlarm".equals(action)) {
-                immediateAlert(device.address, 2);
-            }
-            if ("stopAlarm".equals(action)) {
-                immediateAlert(device.address, 0);
-            }
-        }
-        return START_STICKY;
+    protected void onResume() {
+        super.onResume();
+        connect();
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+    protected void onPause() {
+        super.onPause();
         disconnect();
     }
 
-    private Notification getNotification(String text) {
-        Intent resultIntent = new Intent(this, MainActivity.class);
-        PendingIntent resultPendingIntent = PendingIntent.getActivity(
-                this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT
-        );
-        return new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_link)
-                .setContentTitle(getString(R.string.app_name))
-                .setContentText(text)
-                .setContentIntent(resultPendingIntent).build();
+    //УРОВЕНЬ СИГНАЛА
+    private void launchTrackingRemoteRssi(final BluetoothGatt gatt) {
+        if (trackRemoteRssi != null) {
+            handler.removeCallbacks(trackRemoteRssi);
+        }
+
+        trackRemoteRssi = new Runnable() {
+            @Override
+            public void run() {
+                gatt.readRemoteRssi();
+                handler.postDelayed(this, 5000);
+            }
+        };
+        handler.post(trackRemoteRssi);
     }
 
-    public boolean connect(ScanResult result) {
+    public boolean connect() {
         if (bluetoothAdapter == null) {
             return false;
         }
-
-        bluetoothGatt.put(result.getDevice().getAddress(), result.getDevice().connectGatt(this, false, callback));
+        bluetoothGatt = result.getDevice().connectGatt(this, false, callback);
         return true;
     }
 
     public void disconnect() {
-        if (bluetoothAdapter == null) {
+        if (bluetoothAdapter == null || bluetoothGatt == null) {
             return;
         }
-        for (BluetoothGatt gatt : bluetoothGatt.values()) {
-            gatt.disconnect();
-        }
+        bluetoothGatt.disconnect();
     }
 
     public boolean initialize() {
@@ -206,13 +238,13 @@ public class BleService extends Service {
         return null;
     }
 
-    public void immediateAlert(String address, int alertType) {
+    public void immediateAlert(int alertType) {
         if (immediateAlertService == null || immediateAlertService.getCharacteristics() == null || immediateAlertService.getCharacteristics().size() == 0) {
             //somethingGoesWrong();
             return;
         }
         final BluetoothGattCharacteristic characteristic = immediateAlertService.getCharacteristics().get(0);
         characteristic.setValue(alertType, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-        bluetoothGatt.get(address).writeCharacteristic(characteristic);
+        bluetoothGatt.writeCharacteristic(characteristic);
     }
 }
