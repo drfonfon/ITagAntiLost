@@ -95,10 +95,10 @@ public class SwipeToDismissHelper extends ItemTouchHelper.SimpleCallback {
 
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-        deleteListener.onItemDelete(viewHolder.getAdapterPosition());
+        deleteListener.onItemDelete((String) viewHolder.itemView.getTag());
     }
 
     public interface DeleteListener{
-        void onItemDelete(int position);
+        void onItemDelete(String tag);
     }
 }

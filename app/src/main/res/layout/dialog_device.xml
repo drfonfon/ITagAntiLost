@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="model"
+            type="com.fonfon.noloss.ui.detail.DeviceDialogViewModel"/>
+    </data>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/dialog_background"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <android.support.v7.widget.AppCompatEditText
+            android:id="@+id/name"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="@{model.name}"/>
+
+        <com.fonfon.noloss.ui.BatteryView
+            android:id="@+id/battery"
+            android:layout_width="42dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            app:level="@{model.device.batteryLevel}"/>
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/alert"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:onClick="@{model::alertOnOff}"
+            android:text="@{model.isAlarmed ? @string/stop_alarm : @string/start_alarm}" />
+
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:onClick="@{model::connectDisconnect}"
+            android:text="@{model.status == 2 ? @string/disconnect : @string/connect}" />
+
+    </LinearLayout>
+
+</layout>

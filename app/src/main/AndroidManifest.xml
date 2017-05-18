@@ -11,8 +11,6 @@
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
@@ -24,6 +22,10 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/google_maps_key" />
+
         <activity
             android:name=".ui.main.MainActivity"
             android:screenOrientation="portrait">
@@ -33,14 +35,26 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".DetailActivity" />
+        <activity
+            android:name=".ui.newdevice.NewDeviceActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.map.MapActivity"
+            android:screenOrientation="portrait" />
 
         <service
             android:name=".lib.BleService"
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".ui.newdevice.NewDeviceActivity"></activity>
+        <receiver
+            android:name=".lib.ClickBroadcastReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="DEVICE_BUTTON_CLICKED"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

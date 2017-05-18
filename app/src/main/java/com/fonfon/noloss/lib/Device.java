@@ -1,6 +1,7 @@
 package com.fonfon.noloss.lib;
 
 import android.bluetooth.le.ScanResult;
+import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.IntDef;
@@ -8,43 +9,70 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class Device implements Parcelable {
+import io.realm.Realm;
+import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
+import io.realm.annotations.PrimaryKey;
 
+public class Device extends RealmObject implements Parcelable {
+
+    @Ignore
+    public static final String ADDRESS = "address";
+
+    @Ignore
     public static final int DISCONNECTED = 0;
+    @Ignore
     public static final int CONNECTION = 1;
+    @Ignore
     public static final int CONNECTED = 2;
-    public static final int ALARMED = 3;
 
-    private ScanResult scanResult;
+    @PrimaryKey
+    private String address;
     private String name;
+    private double latitude;
+    private double longitude;
+    @Ignore
     private byte batteryLevel;
+    @Ignore
     private int status = DISCONNECTED;
+    @Ignore
+    private boolean isAlarmed = false;
 
-    @IntDef({DISCONNECTED, CONNECTION, CONNECTED, ALARMED})
+    @IntDef({DISCONNECTED, CONNECTION, CONNECTED})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
     }
 
+    public Device() {
+
+    }
+
     public Device(ScanResult scanResult) {
-        this.scanResult = scanResult;
+        address = scanResult.getDevice().getAddress();
         name = scanResult.getScanRecord().getDeviceName();
+        latitude = 0;
+        longitude = 0;
         batteryLevel = 0;
         status = DISCONNECTED;
+        isAlarmed = false;
     }
 
     protected Device(Parcel in) {
-        scanResult = in.readParcelable(ScanResult.class.getClassLoader());
+        address = in.readString();
         name = in.readString();
         batteryLevel = in.readByte();
         status = in.readInt();
+        isAlarmed = in.readByte() == 0;
+        latitude = in.readDouble();
+        longitude = in.readDouble();
     }
 
-    public ScanResult getScanResult() {
-        return scanResult;
+    public String getAddress() {
+        return address;
     }
 
-    public void setScanResult(ScanResult scanResult) {
-        this.scanResult = scanResult;
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public String getName() {
@@ -63,12 +91,66 @@ public class Device implements Parcelable {
         this.batteryLevel = batteryLevel;
     }
 
-    public @Status int getStatus() {
+    public
+    @Status
+    int getStatus() {
         return status;
     }
 
     public void setStatus(@Status int status) {
         this.status = status;
+    }
+
+    public void setAlarmed(boolean alarmed) {
+        isAlarmed = alarmed;
+    }
+
+    public boolean isAlarmed() {
+        return isAlarmed;
+    }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
+
+    public void setLocation(Location location) {
+        if (location != null) {
+            this.latitude = location.getLatitude();
+            this.longitude = location.getLongitude();
+        }
+    }
+
+    public Location getLocation() {
+        Location location = new Location("device");
+        location.setLatitude(latitude);
+        location.setLongitude(longitude);
+        return location;
+    }
+
+    public static void addToRealm(
+            final ScanResult scanResult,
+            Realm.Transaction.OnSuccess onSuccess,
+            Realm.Transaction.OnError onError
+    ) {
+        Realm.getDefaultInstance()
+                .executeTransactionAsync(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.copyToRealmOrUpdate(new Device(scanResult));
+                    }
+                }, onSuccess, onError);
     }
 
     public static final Creator<Device> CREATOR = new Creator<Device>() {
@@ -90,9 +172,12 @@ public class Device implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeParcelable(scanResult, flags);
+        dest.writeString(address);
         dest.writeString(name);
         dest.writeByte(batteryLevel);
         dest.writeInt(status);
+        dest.writeByte((byte) (isAlarmed ? 0 : 1));
+        dest.writeDouble(latitude);
+        dest.writeDouble(longitude);
     }
 }

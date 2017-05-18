@@ -1,6 +1,7 @@
 package com.fonfon.noloss.ui.newdevice;
 
 import android.bluetooth.le.ScanResult;
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -40,6 +41,17 @@ public class NewDeviceActivity extends AppCompatActivity implements NewDeviceVie
     protected void onResume() {
         super.onResume();
         model.resume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        model.pause();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        model.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override

@@ -41,17 +41,32 @@
 
         </android.support.v4.widget.SwipeRefreshLayout>
 
-        <android.support.v7.widget.AppCompatTextView
+
+        <LinearLayout
             android:id="@+id/empty_text"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fontFamily="monospace"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:gravity="center"
-            android:text="@string/devices_not_found"
-            android:textColor="@color/mystic"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
+            android:layout_gravity="center">
+
+            <android.support.v7.widget.AppCompatImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/ic_drag_down"/>
+
+            <android.support.v7.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:gravity="center"
+                android:text="@string/devices_not_found"
+                android:textColor="@color/oil"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:visibility="visible" />
+
+        </LinearLayout>
 
     </android.support.design.widget.CoordinatorLayout>
 

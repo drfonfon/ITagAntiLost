@@ -5,6 +5,8 @@
 
     <data>
 
+        <import type="android.view.View"/>
+
         <variable
             name="device"
             type="com.fonfon.noloss.lib.Device" />
@@ -26,19 +28,41 @@
             android:layout_margin="8dp"
             app:level="@{device.batteryLevel}" />
 
-        <android.support.v7.widget.AppCompatTextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:paddingEnd="8dp"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp"
-            android:paddingStart="8dp"
-            android:text="@{device.name}"
-            android:textColor="@color/oil"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            tools:text="name" />
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical">
+
+            <android.support.v7.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:paddingEnd="8dp"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingStart="8dp"
+                android:text="@{device.name}"
+                android:textColor="@color/oil"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"
+                tools:text="name" />
+
+            <android.support.v7.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:fontFamily="monospace"
+                android:paddingEnd="8dp"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingStart="8dp"
+                android:text="@{device.status == device.DISCONNECTED ? @string/status_disconnected : (device.status == device.CONNECTION ? @string/status_connecting : @string/status_connected)}"
+                android:textSize="12sp"
+                tools:text="name" />
+
+        </LinearLayout>
 
         <Space
             android:layout_width="0dp"
@@ -50,7 +74,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/mystic"
-            android:text="@{device.status == device.DISCONNECTED ? @string/connect : (device.status == device.CONNECTED ? @string/start_alarm : @string/stop_alarm)}" />
+            android:visibility="@{device.status == device.CONNECTED ? View.VISIBLE : View.GONE}"
+            android:text="@{device.isAlarmed ? @string/stop_alarm : @string/start_alarm}" />
 
     </LinearLayout>
 
