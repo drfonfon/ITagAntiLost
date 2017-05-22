@@ -20,5 +20,9 @@
     <string name="start_service_error">Can not start the service</string>
     <string name="working">Working</string>
     <string name="add_device_error">Unable to add a device</string>
+    <string name="location_updated">location updated</string>
+    <string name="title_activity_detail">DetailActivity</string>
+    <string name="device_name">Device name</string>
+    <string name="battery_level">Battery level: %d%%</string>
 
 </resources>

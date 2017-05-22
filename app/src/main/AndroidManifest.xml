@@ -14,6 +14,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+
     <application
         android:name=".App"
         android:allowBackup="true"
@@ -52,9 +54,17 @@
             android:enabled="true"
             android:exported="true">
             <intent-filter>
-                <action android:name="DEVICE_BUTTON_CLICKED"/>
+                <action android:name="DEVICE_BUTTON_CLICKED" />
             </intent-filter>
         </receiver>
+
+        <activity
+            android:name=".ui.detail.DetailActivity"
+            android:label="@string/title_activity_detail"
+            android:theme="@style/AppTheme"
+            android:screenOrientation="portrait"/>
+
+        <service android:name=".lib.SaveImageService"/>
     </application>
 
 </manifest>

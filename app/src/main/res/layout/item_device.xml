@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
@@ -16,17 +15,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:paddingEnd="8dp"
         android:paddingLeft="8dp"
         android:paddingRight="8dp"
-        android:paddingStart="8sp">
+        android:paddingStart="8sp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
-        <com.fonfon.noloss.ui.BatteryView
-            android:layout_width="48dp"
-            android:layout_height="24dp"
-            android:layout_gravity="center"
-            android:layout_margin="8dp"
-            app:level="@{device.batteryLevel}" />
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/device_image"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginEnd="8dp"
+            android:src="@mipmap/ic_launcher"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -38,10 +40,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:paddingEnd="8dp"
-                android:paddingLeft="8dp"
-                android:paddingRight="8dp"
-                android:paddingStart="8dp"
+                android:layout_marginBottom="8dp"
                 android:text="@{device.name}"
                 android:textColor="@color/oil"
                 android:textSize="16sp"
@@ -49,33 +48,33 @@
                 android:fontFamily="monospace"
                 tools:text="name" />
 
-            <android.support.v7.widget.AppCompatTextView
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:fontFamily="monospace"
-                android:paddingEnd="8dp"
-                android:paddingLeft="8dp"
-                android:paddingRight="8dp"
-                android:paddingStart="8dp"
-                android:text="@{device.status == device.DISCONNECTED ? @string/status_disconnected : (device.status == device.CONNECTION ? @string/status_connecting : @string/status_connected)}"
-                android:textSize="12sp"
-                tools:text="name" />
+                android:orientation="horizontal">
+
+                <android.support.v7.widget.AppCompatTextView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:enabled="@{device.isConnected}"
+                    android:background="@drawable/selector_connection"/>
+
+                <android.support.v7.widget.AppCompatTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:fontFamily="monospace"
+                    android:paddingEnd="8dp"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:paddingStart="8dp"
+                    android:text="@{device.isConnected ? @string/status_connected : @string/status_disconnected }"
+                    android:textSize="14sp"
+                    tools:text="name" />
+
+            </LinearLayout>
 
         </LinearLayout>
-
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
-
-        <android.support.v7.widget.AppCompatButton
-            android:id="@+id/button_action"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@color/mystic"
-            android:visibility="@{device.status == device.CONNECTED ? View.VISIBLE : View.GONE}"
-            android:text="@{device.isAlarmed ? @string/stop_alarm : @string/start_alarm}" />
 
     </LinearLayout>
 

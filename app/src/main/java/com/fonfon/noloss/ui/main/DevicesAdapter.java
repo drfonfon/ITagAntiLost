@@ -1,11 +1,13 @@
 package com.fonfon.noloss.ui.main;
 
+import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.fonfon.noloss.R;
 import com.fonfon.noloss.databinding.ItemDeviceBinding;
 import com.fonfon.noloss.lib.Device;
 
@@ -35,7 +37,14 @@ class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
 
     @Override
     public void onBindViewHolder(Holder holder, int position) {
-        holder.binding.setDevice(adapterData.get(position));
+        Device device = adapterData.get(position);
+        holder.binding.setDevice(device);
+        Bitmap image = device.getBitmap();
+        if (image != null) {
+            holder.binding.deviceImage.setImageBitmap(image);
+        } else {
+            holder.binding.deviceImage.setImageResource(R.mipmap.ic_launcher);
+        }
         holder.itemView.setTag(adapterData.get(position).getAddress());
     }
 
@@ -57,7 +66,7 @@ class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
     void deviceConnected(String address) {
         int index = addresses.indexOf(address);
         if (index != -1) {
-            adapterData.get(index).setStatus(Device.CONNECTED);
+            adapterData.get(index).setConnected(true);
             notifyItemChanged(index);
         }
     }
@@ -65,26 +74,25 @@ class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
     void deviceDisconnected(String address) {
         int index = addresses.indexOf(address);
         if (index != -1) {
-            adapterData.get(index).setStatus(Device.DISCONNECTED);
+            adapterData.get(index).setConnected(false);
             notifyItemChanged(index);
         }
     }
 
-    void deviceBatteryLevelUpdated(String address, byte batteryLevel) {
-        int index = addresses.indexOf(address);
-        if (index != -1) {
-            adapterData.get(index).setBatteryLevel(batteryLevel);
-            notifyItemChanged(index);
-        }
+    void deviceDeleted(int index) {
+        adapterData.remove(index);
+        addresses.remove(index);
+        notifyItemRemoved(index);
     }
 
-    void deviceDeleted(String address) {
-        int index = addresses.indexOf(address);
-        if (index != -1) {
-            adapterData.remove(index);
-            addresses.remove(index);
-            notifyItemRemoved(index);
-        }
+    void deviceAlerted(int index) {
+        Device device = adapterData.get(index);
+        device.setAlarmed(!device.isAlarmed());
+        notifyItemChanged(index);
+    }
+
+    boolean getDeviceAlertStatus(int index) {
+        return adapterData.get(index).isAlarmed();
     }
 
     class Holder extends RecyclerView.ViewHolder {
@@ -94,15 +102,6 @@ class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
         Holder(ItemDeviceBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
-            this.binding.buttonAction.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Device device = adapterData.get(getAdapterPosition());
-                    device.setAlarmed(!device.isAlarmed());
-                    listener.onAlarm(device.getAddress(), device.isAlarmed());
-                    notifyItemChanged(getAdapterPosition());
-                }
-            });
             this.binding.getRoot().setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -114,7 +113,7 @@ class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
     }
 
     interface Listener {
-        void onAlarm(String result, boolean alarm);
+
         void onDeviceClick(Device device);
     }
 }

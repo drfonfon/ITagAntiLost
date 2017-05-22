@@ -17,24 +17,33 @@ import android.view.View;
 
 import com.fonfon.noloss.R;
 
-public class SwipeToDismissHelper extends ItemTouchHelper.SimpleCallback {
+public class SwipeHelper extends ItemTouchHelper.SimpleCallback {
 
-    private Context context;
-    private Bitmap icon;
+    private Bitmap iconDelete;
+    private Bitmap iconAlertOn;
+    private Bitmap iconAlertOff;
     private Paint paint;
     private ItemTouchHelper itemTouchHelper;
     private RectF background;
     private RectF iconDest;
     private DeleteListener deleteListener;
 
-    public SwipeToDismissHelper(Context context, DeleteListener listener) {
-        super(0, ItemTouchHelper.LEFT);
-        this.context = context;
+    private final int mojo;
+    private final int fern;
+    private final int sun;
+
+    public SwipeHelper(Context context, DeleteListener listener) {
+        super(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT);
         this.deleteListener = listener;
-        icon = getBitmapFromDrawable(context, R.drawable.ic_delete);
+        iconDelete = getBitmapFromDrawable(context, R.drawable.ic_delete);
+        iconAlertOn = getBitmapFromDrawable(context, R.drawable.ic_volume_up);
+        iconAlertOff = getBitmapFromDrawable(context, R.drawable.ic_volume_off);
         itemTouchHelper = new ItemTouchHelper(this);
         paint = new Paint();
-        paint.setColor(ContextCompat.getColor(context, R.color.mojo));
+        mojo = ContextCompat.getColor(context, R.color.mojo);
+        fern = ContextCompat.getColor(context, R.color.fern);
+        sun = ContextCompat.getColor(context, R.color.sun);
+        paint.setColor(mojo);
         background = new RectF();
         iconDest = new RectF();
     }
@@ -69,6 +78,8 @@ public class SwipeToDismissHelper extends ItemTouchHelper.SimpleCallback {
             float width = height / 3;
 
             if (dX < 0) {
+                boolean isAlarmed = deleteListener.onMove(viewHolder.getAdapterPosition());
+                paint.setColor(isAlarmed ? sun : fern);
                 background.set(
                         (float) itemView.getRight() + dX,
                         (float) itemView.getTop(),
@@ -82,7 +93,23 @@ public class SwipeToDismissHelper extends ItemTouchHelper.SimpleCallback {
                         (float) itemView.getRight() - width,
                         (float) itemView.getBottom() - width
                 );
-                c.drawBitmap(icon, null, iconDest, paint);
+                c.drawBitmap(isAlarmed ? iconAlertOff : iconAlertOn, null, iconDest, paint);
+            } else {
+                paint.setColor(mojo);
+                background.set(
+                        (float) itemView.getLeft(),
+                        (float) itemView.getTop(),
+                        dX,
+                        (float) itemView.getBottom()
+                );
+                c.drawRect(background, paint);
+                iconDest.set(
+                        (float) itemView.getLeft() + width,
+                        (float) itemView.getTop() + width,
+                        (float) itemView.getLeft() + 2 * width,
+                        (float) itemView.getBottom() - width
+                );
+                c.drawBitmap(iconDelete, null, iconDest, paint);
             }
         }
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
@@ -95,10 +122,17 @@ public class SwipeToDismissHelper extends ItemTouchHelper.SimpleCallback {
 
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-        deleteListener.onItemDelete((String) viewHolder.itemView.getTag());
+        if (direction == ItemTouchHelper.RIGHT) {
+            deleteListener.onItemDelete(viewHolder.itemView.getTag(), viewHolder.getAdapterPosition());
+        } else {
+            deleteListener.onItemAlert(viewHolder.itemView.getTag(), viewHolder.getAdapterPosition());
+        }
+
     }
 
-    public interface DeleteListener{
-        void onItemDelete(String tag);
+    public interface DeleteListener {
+        void onItemDelete(Object tag, int adapterPosition);
+        void onItemAlert(Object tag, int adapterPosition);
+        boolean onMove(int adapterPosition);
     }
 }

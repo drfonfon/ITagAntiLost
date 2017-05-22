@@ -58,6 +58,7 @@ public class BleService extends Service {
     public static final String STOP_ALARM = "STOP_ALARM";
     public static final String DISCONNECT = "DISCONNECT";
     public static final String CONNECTED_DEVICES = "CONNECTED_DEVICES";
+    public static final String CHECK_BATTERY = "CHECK_BATTERY";
     public static final String STOP_SERVICE = "STOP_SERVICE_?";
 
     public static final String DEVICE_CONNECTED = "DEVICE_CONNECTED";
@@ -90,22 +91,39 @@ public class BleService extends Service {
         ) {
             if (BluetoothGatt.GATT_SUCCESS == status) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
-                    gatt.discoverServices();
-                    sendBroadcast(
-                            new Intent(DEVICE_CONNECTED)
-                                    .putExtra(DEVICE_ADDRESS, gatt.getDevice().getAddress())
-                    );
+                    onConnected(gatt);
                 }
-
                 if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    gatt.close();
-                    sendBroadcast(
-                            new Intent(DEVICE_DISCONNECTED)
-                                    .putExtra(DEVICE_ADDRESS, gatt.getDevice()
-                                            .getAddress())
-                    );
+                    onDisconnected(gatt);
                 }
+            } else {
+                onDisconnected(gatt);
             }
+        }
+
+        private void onConnected(BluetoothGatt gatt) {
+            gatt.discoverServices();
+            bluetoothGatt.put(gatt.getDevice().getAddress(), gatt);
+            sendBroadcast(
+                    new Intent(DEVICE_CONNECTED)
+                            .putExtra(DEVICE_ADDRESS, gatt.getDevice().getAddress())
+            );
+        }
+
+        private void onDisconnected(BluetoothGatt gatt) {
+            gatt.close();
+            BluetoothGatt gat = bluetoothGatt.get(gatt.getDevice().getAddress());
+            if (gat != null) {
+                bluetoothGatt.remove(gat.getDevice().getName());
+            }
+            if (bluetoothGatt.size() == 0) {
+                stopSelf();
+            }
+            sendBroadcast(
+                    new Intent(DEVICE_DISCONNECTED)
+                            .putExtra(DEVICE_ADDRESS, gatt.getDevice()
+                                    .getAddress())
+            );
         }
 
         @Override
@@ -114,7 +132,6 @@ public class BleService extends Service {
                 int status
         ) {
             for (BluetoothGattService service : gatt.getServices()) {
-
                 if (IMMEDIATE_ALERT_SERVICE.equals(service.getUuid())) {
                     immediateAlertService = service;
                     alertCharacteristic = getCharacteristic(
@@ -183,6 +200,7 @@ public class BleService extends Service {
             startForeground(NOTIFICATION_ID, getNotification(getString(R.string.working)));
         } else {
             error(getString(R.string.start_service_error));
+            stopSelf();
         }
     }
 
@@ -200,19 +218,14 @@ public class BleService extends Service {
                 switch (action) {
                     case CONNECTED_DEVICES:
                         String[] addrecces = bluetoothGatt.keySet().toArray(new String[bluetoothGatt.size()]);
-                        if(batteryCharacteristic != null) {
-                            for (BluetoothGatt gatt : bluetoothGatt.values()) {
-                                gatt.readCharacteristic(batteryCharacteristic);
-                            }
-                        }
                         sendBroadcast(
                                 new Intent(CONNECTED_DEVICES)
                                         .putExtra(DEVICES_ADDRESSES, addrecces)
                         );
                         break;
                     case STOP_SERVICE:
-                        if(bluetoothGatt.size() == 0) {
-                            stopService(new Intent(this, BleService.class));
+                        if (bluetoothGatt.size() == 0) {
+                            stopSelf();
                         }
                         break;
                     default:
@@ -231,6 +244,12 @@ public class BleService extends Service {
                                         break;
                                     case STOP_ALARM:
                                         immediateAlert(bluetoothDevice.getAddress(), ALERT_STOP);
+                                        break;
+                                    case CHECK_BATTERY:
+                                        BluetoothGatt gatt = bluetoothGatt.get(bluetoothDevice.getAddress());
+                                        if (gatt != null && batteryCharacteristic != null) {
+                                            gatt.readCharacteristic(batteryCharacteristic);
+                                        }
                                         break;
                                 }
                             }
@@ -274,10 +293,7 @@ public class BleService extends Service {
         if (bluetoothAdapter == null) {
             return false;
         }
-
-        if (bluetoothGatt.get(result.getAddress()) == null) {
-            bluetoothGatt.put(result.getAddress(), result.connectGatt(this, false, callback));
-        }
+        result.connectGatt(this, false, callback);
         return true;
     }
 

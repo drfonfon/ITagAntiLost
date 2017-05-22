@@ -1,6 +1,7 @@
 package com.fonfon.noloss.lib;
 
 import android.Manifest;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,7 +10,9 @@ import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 
+import com.fonfon.noloss.R;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
@@ -37,7 +40,7 @@ public class ClickBroadcastReceiver extends BroadcastReceiver {
                     final LocationListener locationListener = new LocationListener() {
                         @Override
                         public void onLocationChanged(final Location location) {
-                            updateDeviceLocation(device, location);
+                            updateDeviceLocation(context, device, location);
                             LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
                             googleApiClient.disconnect();
                         }
@@ -82,6 +85,7 @@ public class ClickBroadcastReceiver extends BroadcastReceiver {
     }
 
     private void updateDeviceLocation(
+            Context context,
             final Device device,
             final Location location
     ) {
@@ -91,6 +95,14 @@ public class ClickBroadcastReceiver extends BroadcastReceiver {
                 device.setLocation(location);
             }
         });
+        ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
+                .notify(device.doHash(),
+                        new NotificationCompat.Builder(context)
+                                .setSmallIcon(R.drawable.ic_find_key)
+                                .setContentTitle(context.getString(R.string.app_name))
+                                .setContentText(device.getName() + context.getString(R.string.location_updated))
+                                .build()
+                );
     }
 
     private synchronized GoogleApiClient getGoogleApiClient(
@@ -100,4 +112,6 @@ public class ClickBroadcastReceiver extends BroadcastReceiver {
                 .addApi(LocationServices.API)
                 .build();
     }
+
+    
 }

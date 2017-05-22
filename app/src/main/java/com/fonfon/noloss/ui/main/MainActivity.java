@@ -10,7 +10,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.databinding.ActivityMainBinding;
 import com.fonfon.noloss.lib.Device;
-import com.fonfon.noloss.ui.SwipeToDismissHelper;
+import com.fonfon.noloss.ui.DividerItemDecoration;
+import com.fonfon.noloss.ui.SwipeHelper;
 
 import io.realm.RealmResults;
 
@@ -27,11 +28,12 @@ public class MainActivity extends AppCompatActivity implements MainActivityViewM
         model = new MainActivityViewModel(this, this);
         binding.setModel(model);
         binding.recycler.setLayoutManager(new LinearLayoutManager(this));
+        binding.recycler.addItemDecoration(new DividerItemDecoration(getDrawable(R.drawable.divider), 40, 40));
         adapter = new DevicesAdapter(model);
         binding.recycler.setAdapter(adapter);
 
-        SwipeToDismissHelper swipeToDismissHelper = new SwipeToDismissHelper(this, model);
-        swipeToDismissHelper.attachToRecyclerView(binding.recycler);
+        SwipeHelper swipeHelper = new SwipeHelper(this, model);
+        swipeHelper.attachToRecyclerView(binding.recycler);
         model.init();
     }
 
@@ -81,12 +83,17 @@ public class MainActivity extends AppCompatActivity implements MainActivityViewM
     }
 
     @Override
-    public void deviceBatteryLevelUpdated(String address, byte batteryLevel) {
-        adapter.deviceBatteryLevelUpdated(address, batteryLevel);
+    public void deviceDeleted(int index) {
+        adapter.deviceDeleted(index);
     }
 
     @Override
-    public void deviceDeleted(String address) {
-        adapter.deviceDeleted(address);
+    public void deviceAlert(int index) {
+        adapter.deviceAlerted(index);
+    }
+
+    @Override
+    public boolean getDeviceAlertStatus(int index) {
+        return adapter.getDeviceAlertStatus(index);
     }
 }
