@@ -25,7 +25,52 @@ import com.fonfon.noloss.ui.main.MainActivity;
 import java.util.HashMap;
 import java.util.UUID;
 
-public class BleService extends Service {
+public final class BleService extends Service {
+
+    public static void connect(Context context, String address) {
+        context.startService(
+                new Intent(context, BleService.class)
+                        .setAction(BleService.CONNECT)
+                        .putExtra(BleService.DEVICE_ADDRESS, address)
+        );
+    }
+
+    public static void alert(Context context, String address, boolean alert) {
+        context.startService(
+                new Intent(context, BleService.class)
+                        .setAction(alert ? BleService.START_ALARM : BleService.STOP_ALARM)
+                        .putExtra(BleService.DEVICE_ADDRESS, address)
+        );
+    }
+
+    public static void stopService(Context context) {
+        context.startService(
+                new Intent(context, BleService.class)
+                        .setAction(BleService.STOP_SERVICE)
+        );
+    }
+
+    public static void checkConnectedDevices(Context context) {
+        context.startService(
+                new Intent(context, BleService.class)
+                        .setAction(BleService.CONNECTED_DEVICES)
+        );
+    }
+
+    public static void checkBattery(Context context) {
+        context.startService(
+                new Intent(context, BleService.class)
+                        .setAction(BleService.CHECK_BATTERY)
+        );
+    }
+
+    public static void disconnect(Context context, String address) {
+        context.startService(
+                new Intent(context, BleService.class)
+                        .setAction(BleService.DISCONNECT)
+                        .putExtra(BleService.DEVICE_ADDRESS, address)
+        );
+    }
 
     /**
      * Button BLE service

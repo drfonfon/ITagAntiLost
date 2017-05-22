@@ -20,7 +20,7 @@ import com.google.android.gms.location.LocationServices;
 
 import io.realm.Realm;
 
-public class ClickBroadcastReceiver extends BroadcastReceiver {
+public final class ClickBroadcastReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(

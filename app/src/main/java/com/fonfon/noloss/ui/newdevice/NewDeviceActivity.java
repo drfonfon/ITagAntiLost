@@ -5,6 +5,7 @@ import android.bluetooth.le.ScanResult;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.view.View;
@@ -13,7 +14,7 @@ import com.fonfon.noloss.R;
 import com.fonfon.noloss.databinding.ActivityNewDeviceBinding;
 import com.fonfon.noloss.ui.DividerItemDecoration;
 
-public class NewDeviceActivity extends AppCompatActivity implements NewDeviceViewModel.DataListener {
+public final class NewDeviceActivity extends AppCompatActivity implements NewDeviceViewModel.DataListener {
 
     public static void show(Activity activity) {
         activity.startActivity(new Intent(activity, NewDeviceActivity.class));
@@ -22,6 +23,7 @@ public class NewDeviceActivity extends AppCompatActivity implements NewDeviceVie
 
     private ActivityNewDeviceBinding binding;
     private NewDeviceViewModel model;
+    private NewDevicesAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,8 +31,10 @@ public class NewDeviceActivity extends AppCompatActivity implements NewDeviceVie
         binding = DataBindingUtil.setContentView(this, R.layout.activity_new_device);
         model = new NewDeviceViewModel(this, this);
         binding.recycler.setLayoutManager(new LinearLayoutManager(this));
-        binding.recycler.setAdapter(new NewDevicesAdapter(model));
-        binding.recycler.addItemDecoration(new DividerItemDecoration(getDrawable(R.drawable.divider), 40, 40));
+        adapter = new NewDevicesAdapter(model);
+        binding.recycler.setAdapter(adapter);
+        int padding = getResources().getDimensionPixelSize(R.dimen.fab_margin);
+        binding.recycler.addItemDecoration(new DividerItemDecoration(getDrawable(R.drawable.divider), padding, padding));
         binding.refresh.setOnRefreshListener(model);
 
         binding.toolbar.setNavigationIcon(R.drawable.ic_back);
@@ -67,19 +71,26 @@ public class NewDeviceActivity extends AppCompatActivity implements NewDeviceVie
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        model.init();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         binding.unbind();
+        model.onDestroy();
     }
 
     @Override
     public void onResult(ScanResult scanResult) {
-        ((NewDevicesAdapter) binding.recycler.getAdapter()).add(scanResult);
+        adapter.add(scanResult);
     }
 
     @Override
     public void clear() {
-        ((NewDevicesAdapter) binding.recycler.getAdapter()).clear();
+        adapter.clear();
     }
 
     @Override

@@ -11,7 +11,7 @@ import com.fonfon.noloss.databinding.ItemNewDeviceBinding;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-class NewDevicesAdapter extends RecyclerView.Adapter<NewDevicesAdapter.Holder> {
+final class NewDevicesAdapter extends RecyclerView.Adapter<NewDevicesAdapter.Holder> {
 
     private HashMap<String, ScanResult> devices = new HashMap<>();
 

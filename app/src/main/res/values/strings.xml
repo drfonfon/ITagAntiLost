@@ -24,5 +24,8 @@
     <string name="title_activity_detail">DetailActivity</string>
     <string name="device_name">Device name</string>
     <string name="battery_level">Battery level: %d%%</string>
+    <string name="ble_permission">Permission is required to determine the position and work bluetooth</string>
+    <string name="load_image_error">Could not load image</string>
+    <string name="save_image_error">Could not save image</string>
 
 </resources>

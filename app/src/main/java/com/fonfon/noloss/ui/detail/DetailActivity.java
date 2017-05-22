@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
@@ -13,7 +14,7 @@ import com.fonfon.noloss.databinding.ActivityDetailBinding;
 import com.fonfon.noloss.lib.Device;
 import com.google.android.gms.maps.SupportMapFragment;
 
-public class DetailActivity extends AppCompatActivity implements DetailActivityViewModel.DataListener {
+public final class DetailActivity extends AppCompatActivity implements DetailActivityViewModel.DataListener {
 
     public static void show(Activity context, String deviceAddress) {
         context.startActivity(
@@ -31,7 +32,7 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityV
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_detail);
         String address = getIntent().getStringExtra(Device.ADDRESS);
-        if(address == null) {
+        if (address == null) {
             finish();
         }
         model = new DetailActivityViewModel(this, address, this);
@@ -44,7 +45,6 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityV
                 finish();
             }
         });
-
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(model);
@@ -78,16 +78,21 @@ public class DetailActivity extends AppCompatActivity implements DetailActivityV
     protected void onDestroy() {
         super.onDestroy();
         binding.unbind();
+        model.onDestroy();
     }
 
     @Override
-    public void onImage(Bitmap imageUri) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        model.init();
+    }
 
-        if(imageUri != null) {
-            binding.deviceImage.setImageBitmap(imageUri);
-        } else {
+    @Override
+    public void onImage(Bitmap bitmap) {
+        if (bitmap != null)
+            binding.deviceImage.setImageBitmap(bitmap);
+        else
             binding.deviceImage.setImageResource(R.mipmap.ic_launcher);
-        }
     }
 
     @Override

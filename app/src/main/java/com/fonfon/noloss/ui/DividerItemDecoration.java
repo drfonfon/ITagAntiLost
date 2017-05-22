@@ -6,7 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-public class DividerItemDecoration extends RecyclerView.ItemDecoration {
+public final class DividerItemDecoration extends RecyclerView.ItemDecoration {
 
     private Drawable divider;
     private int leftPadding = 0;
@@ -14,11 +14,6 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
 
     public DividerItemDecoration(Drawable divider) {
         this.divider = divider;
-    }
-
-    public DividerItemDecoration(Drawable divider, int leftPadding) {
-        this.divider = divider;
-        this.leftPadding = leftPadding;
     }
 
     public DividerItemDecoration(Drawable divider, int leftPadding, int rightPadding) {

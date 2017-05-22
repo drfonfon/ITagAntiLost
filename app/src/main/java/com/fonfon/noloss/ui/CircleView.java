@@ -1,4 +1,4 @@
-package com.fonfon.noloss.lib;
+package com.fonfon.noloss.ui;
 
 import android.content.Context;
 import android.databinding.BindingMethod;
@@ -6,7 +6,7 @@ import android.databinding.BindingMethods;
 import android.util.AttributeSet;
 
 @BindingMethods(@BindingMethod(type = CircleView.class, attribute = "progressStepValue", method = "setProgressValue"))
-public class CircleView extends rjsv.circularview.CircleView {
+public final class CircleView extends rjsv.circularview.CircleView {
 
     public CircleView(Context context) {
         super(context);

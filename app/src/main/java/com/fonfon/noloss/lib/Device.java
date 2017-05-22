@@ -1,14 +1,9 @@
 package com.fonfon.noloss.lib;
 
 import android.bluetooth.le.ScanResult;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Base64;
-
-import java.io.ByteArrayOutputStream;
 
 import io.realm.Realm;
 import io.realm.RealmObject;
@@ -32,13 +27,8 @@ public class Device extends RealmObject implements Parcelable {
     private boolean isConnected = false;
     @Ignore
     private boolean isAlarmed = false;
-    @Ignore
-    private Bitmap bitmap;
 
     public Device() {
-        if(image != null) {
-            bitmap = stringToBitMap(image);
-        }
     }
 
     public Device(ScanResult scanResult) {
@@ -61,9 +51,6 @@ public class Device extends RealmObject implements Parcelable {
         latitude = in.readDouble();
         longitude = in.readDouble();
         image = in.readString();
-        if(image != null) {
-            bitmap = stringToBitMap(image);
-        }
     }
 
     public String getAddress() {
@@ -128,39 +115,6 @@ public class Device extends RealmObject implements Parcelable {
 
     public void setImage(String image) {
         this.image = image;
-        if(image != null) {
-            bitmap = stringToBitMap(image);
-        } else {
-            bitmap = null;
-        }
-    }
-
-    public Bitmap getBitmap() {
-        if(bitmap == null && image != null) {
-            bitmap = stringToBitMap(image);
-        }
-        return bitmap;
-    }
-
-    public void setBitmapImage(Bitmap bitmap) {
-        this.image = bitMapToString(bitmap);
-        this.bitmap = bitmap;
-    }
-
-    private String bitMapToString(Bitmap bitmap) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-        return Base64.encodeToString(baos.toByteArray(), Base64.DEFAULT);
-    }
-
-    private Bitmap stringToBitMap(String encodedString) {
-        try {
-            byte[] encodeByte = Base64.decode(encodedString, Base64.DEFAULT);
-            return BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
-        } catch (Exception e) {
-            e.getMessage();
-            return null;
-        }
     }
 
     public void setLocation(Location location) {
@@ -191,7 +145,7 @@ public class Device extends RealmObject implements Parcelable {
                 }, onSuccess, onError);
     }
 
-    public int doHash() {
+    int doHash() {
         int hash = 451;
         for (int i = 0; i < address.length(); i++) {
             hash = ((hash << 5) + hash) + address.charAt(i);

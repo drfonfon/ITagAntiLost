@@ -7,13 +7,17 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.util.Base64;
 import android.widget.Toast;
 
+import com.fonfon.noloss.R;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import io.realm.Realm;
 
-public class SaveImageService extends IntentService {
+public final class SaveImageService extends IntentService {
 
     public static final String URI = "imageURI";
 
@@ -31,22 +35,30 @@ public class SaveImageService extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         if (intent != null) {
-            Uri imageUri = intent.getParcelableExtra(URI);
-            String address = intent.getStringExtra(Device.ADDRESS);
+            final Uri imageUri = intent.getParcelableExtra(URI);
+            final String address = intent.getStringExtra(Device.ADDRESS);
 
             if (imageUri != null && address != null) {
-                try {
-                    final Bitmap bitmap = new CircleTransform().transform(MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri));
-                    Realm realm = Realm.getDefaultInstance();
-                    realm.beginTransaction();
-                    Device device1 = realm.where(Device.class).equalTo(Device.ADDRESS, address).findFirst();
-                    device1.setBitmapImage(bitmap);
-                    realm.commitTransaction();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Toast.makeText(getApplicationContext(), "Не удалось сохранить изображение", Toast.LENGTH_SHORT).show();
-                }
+                Realm.getDefaultInstance().executeTransactionAsync(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        try {
+                            final Bitmap bitmap = BitmapTransform.transform(
+                                    MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri)
+                            );
+                            Device device = realm.where(Device.class).equalTo(Device.ADDRESS, address).findFirst();
+                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                            device.setImage(Base64.encodeToString(baos.toByteArray(), Base64.DEFAULT));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            Toast.makeText(getApplicationContext(), R.string.save_image_error, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
             }
         }
     }
+
 }

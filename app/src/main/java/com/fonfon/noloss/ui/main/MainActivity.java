@@ -15,7 +15,7 @@ import com.fonfon.noloss.ui.SwipeHelper;
 
 import io.realm.RealmResults;
 
-public class MainActivity extends AppCompatActivity implements MainActivityViewModel.DataListener{
+public final class MainActivity extends AppCompatActivity implements MainActivityViewModel.DataListener {
 
     private ActivityMainBinding binding;
     private MainActivityViewModel model;
@@ -28,7 +28,10 @@ public class MainActivity extends AppCompatActivity implements MainActivityViewM
         model = new MainActivityViewModel(this, this);
         binding.setModel(model);
         binding.recycler.setLayoutManager(new LinearLayoutManager(this));
-        binding.recycler.addItemDecoration(new DividerItemDecoration(getDrawable(R.drawable.divider), 40, 40));
+        int padding = getResources().getDimensionPixelSize(R.dimen.fab_margin);
+        binding.recycler.addItemDecoration(
+                new DividerItemDecoration(getDrawable(R.drawable.divider), padding, padding)
+        );
         adapter = new DevicesAdapter(model);
         binding.recycler.setAdapter(adapter);
 

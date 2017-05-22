@@ -17,7 +17,7 @@ import android.view.View;
 
 import com.fonfon.noloss.R;
 
-public class SwipeHelper extends ItemTouchHelper.SimpleCallback {
+public final class SwipeHelper extends ItemTouchHelper.SimpleCallback {
 
     private Bitmap iconDelete;
     private Bitmap iconAlertOn;

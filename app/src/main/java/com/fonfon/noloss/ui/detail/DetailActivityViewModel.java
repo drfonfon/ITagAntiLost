@@ -15,10 +15,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Toast;
 
+import com.fonfon.noloss.R;
 import com.fonfon.noloss.lib.BleService;
-import com.fonfon.noloss.lib.CircleTransform;
+import com.fonfon.noloss.lib.BitmapTransform;
 import com.fonfon.noloss.lib.Device;
 import com.fonfon.noloss.lib.SaveImageService;
+import com.fonfon.noloss.lib.StringBitmapConverter;
+import com.fonfon.noloss.ui.BleViewModel;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -30,10 +33,9 @@ import java.io.IOException;
 
 import io.realm.Realm;
 
-public class DetailActivityViewModel implements OnMapReadyCallback {
+public final class DetailActivityViewModel extends BleViewModel implements OnMapReadyCallback {
 
     private static final int GALLERY_REQUEST = 2;
-    private AppCompatActivity activity;
     public Device device;
     private DataListener dataListener;
 
@@ -67,7 +69,8 @@ public class DetailActivityViewModel implements OnMapReadyCallback {
         }
     };
 
-    public DetailActivityViewModel(AppCompatActivity activity, String address, DataListener dataListener) {
+    DetailActivityViewModel(AppCompatActivity activity, String address, DataListener dataListener) {
+        super(activity);
         this.activity = activity;
         this.device = Realm.getDefaultInstance().where(Device.class).equalTo(Device.ADDRESS, address).findFirst();
         this.dataListener = dataListener;
@@ -76,19 +79,18 @@ public class DetailActivityViewModel implements OnMapReadyCallback {
         batteryLevel.set(device.getBatteryLevel());
         isAlarmed.set(device.isAlarmed());
         isConnected.set(device.isConnected());
-        dataListener.onImage(device.getBitmap());
+        dataListener.onImage(StringBitmapConverter.stringToBitMap(device.getImage()));
         dataListener.onTitle(device.getName());
     }
 
-    void resume() {
+    @Override
+    public void resume() {
         IntentFilter intentFilter = new IntentFilter(BleService.DEVICE_CONNECTED);
         intentFilter.addAction(BleService.DEVICE_DISCONNECTED);
         intentFilter.addAction(BleService.BATTERY_LEVEL_UPDATED);
         activity.registerReceiver(receiver, intentFilter);
-        activity.startService(
-                new Intent(activity, BleService.class)
-                        .setAction(BleService.CHECK_BATTERY)
-        );
+        BleService.connect(activity, device.getAddress());
+        BleService.checkBattery(activity);
     }
 
     void pause() {
@@ -112,21 +114,22 @@ public class DetailActivityViewModel implements OnMapReadyCallback {
         activity.startActivityForResult(photoPickerIntent, GALLERY_REQUEST);
     }
 
-    void onActivityResult(int requestCode, int resultCode, Intent data) {
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK)
             switch (requestCode) {
                 case GALLERY_REQUEST:
                     final Uri selectedImage = data.getData();
                     SaveImageService.start(activity, selectedImage, device.getAddress());
                     try {
-                        final Bitmap bitmap = new CircleTransform()
-                                .transform(
-                                        MediaStore.Images.Media.getBitmap(activity.getContentResolver(), selectedImage)
-                                );
+                        final Bitmap bitmap = BitmapTransform.transform(
+                                MediaStore.Images.Media.getBitmap(activity.getContentResolver(), selectedImage)
+                        );
                         dataListener.onImage(bitmap);
                     } catch (IOException e) {
                         e.printStackTrace();
-                        Toast.makeText(activity, "Не удалось загрузить изображение", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(activity, R.string.load_image_error, Toast.LENGTH_SHORT).show();
                     }
 
                     break;
@@ -134,14 +137,9 @@ public class DetailActivityViewModel implements OnMapReadyCallback {
     }
 
     public void alertClick(View view) {
-        String action = device.isAlarmed() ? BleService.STOP_ALARM : BleService.START_ALARM;
+        BleService.alert(activity, device.getAddress(), device.isAlarmed());
         device.setAlarmed(!device.isAlarmed());
         isAlarmed.set(device.isAlarmed());
-        activity.startService(
-                new Intent(activity, BleService.class)
-                        .setAction(action)
-                        .putExtra(BleService.DEVICE_ADDRESS, device.getAddress())
-        );
     }
 
     @Override
@@ -157,7 +155,7 @@ public class DetailActivityViewModel implements OnMapReadyCallback {
         }
     }
 
-    public interface DataListener {
+    interface DataListener {
         void onImage(Bitmap image);
 
         void onTitle(String title);

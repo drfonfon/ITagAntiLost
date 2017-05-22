@@ -46,7 +46,7 @@
                     android:layout_marginBottom="16dp"
                     android:layout_marginTop="16dp">
 
-                    <com.fonfon.noloss.lib.CircleView
+                    <com.fonfon.noloss.ui.CircleView
                         android:id="@+id/battery_indicator"
                         android:layout_width="128dp"
                         android:layout_height="128dp"

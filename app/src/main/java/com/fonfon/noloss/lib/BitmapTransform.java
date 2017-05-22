@@ -5,9 +5,12 @@ import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
-public final class CircleTransform {
+public final class BitmapTransform {
 
-    public Bitmap transform(Bitmap source) {
+    private static final int BITMAP_SCALE = 256;
+
+    public static Bitmap transform(Bitmap source) {
+
         int size = Math.min(source.getWidth(), source.getHeight());
 
         int x = (source.getWidth() - size) / 2;
@@ -24,10 +27,10 @@ public final class CircleTransform {
         paint.setShader(shader);
         paint.setAntiAlias(true);
 
-        float r = size/2f;
+        float r = size / 2f;
         canvas.drawCircle(r, r, r, paint);
 
         squaredBitmap.recycle();
-        return bitmap;
+        return Bitmap.createScaledBitmap(bitmap, BITMAP_SCALE, BITMAP_SCALE, false);
     }
 }
