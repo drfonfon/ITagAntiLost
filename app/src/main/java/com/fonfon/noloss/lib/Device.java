@@ -5,7 +5,8 @@ import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import io.realm.Realm;
+import com.google.android.gms.maps.model.LatLng;
+
 import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
@@ -131,18 +132,8 @@ public class Device extends RealmObject implements Parcelable {
         return location;
     }
 
-    public static void addToRealm(
-            final ScanResult scanResult,
-            Realm.Transaction.OnSuccess onSuccess,
-            Realm.Transaction.OnError onError
-    ) {
-        Realm.getDefaultInstance()
-                .executeTransactionAsync(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        realm.copyToRealmOrUpdate(new Device(scanResult));
-                    }
-                }, onSuccess, onError);
+    public LatLng getPosition() {
+        return new LatLng(latitude, longitude);
     }
 
     int doHash() {

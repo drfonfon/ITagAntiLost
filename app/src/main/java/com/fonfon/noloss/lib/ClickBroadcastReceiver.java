@@ -22,6 +22,9 @@ import io.realm.Realm;
 
 public final class ClickBroadcastReceiver extends BroadcastReceiver {
 
+    public static final String LOCATION_CHANGED = "LOCATION_CHANGED";
+    public static final String LOCATION = "LOCATION";
+
     @Override
     public void onReceive(
             final Context context,
@@ -40,9 +43,11 @@ public final class ClickBroadcastReceiver extends BroadcastReceiver {
                     final LocationListener locationListener = new LocationListener() {
                         @Override
                         public void onLocationChanged(final Location location) {
-                            updateDeviceLocation(context, device, location);
-                            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
-                            googleApiClient.disconnect();
+                            if(location != null) {
+                                updateDeviceLocation(context, device, location);
+                                LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+                                googleApiClient.disconnect();
+                            }
                         }
                     };
 
@@ -100,9 +105,14 @@ public final class ClickBroadcastReceiver extends BroadcastReceiver {
                         new NotificationCompat.Builder(context)
                                 .setSmallIcon(R.drawable.ic_find_key)
                                 .setContentTitle(context.getString(R.string.app_name))
-                                .setContentText(device.getName() + context.getString(R.string.location_updated))
+                                .setContentText(device.getName() + " " + context.getString(R.string.location_updated))
                                 .build()
                 );
+        context.sendBroadcast(
+                new Intent(LOCATION_CHANGED)
+                .putExtra(BleService.DEVICE_ADDRESS, device.getAddress())
+                .putExtra(LOCATION, location)
+        );
     }
 
     private synchronized GoogleApiClient getGoogleApiClient(

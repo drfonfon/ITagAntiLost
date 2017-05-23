@@ -1,7 +1,6 @@
 package com.fonfon.noloss.ui.newdevice;
 
 import android.app.Activity;
-import android.bluetooth.le.ScanResult;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
@@ -10,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.view.View;
 
+import com.fonfon.noloss.App;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.databinding.ActivityNewDeviceBinding;
 import com.fonfon.noloss.ui.DividerItemDecoration;
@@ -23,7 +23,6 @@ public final class NewDeviceActivity extends AppCompatActivity implements NewDev
 
     private ActivityNewDeviceBinding binding;
     private NewDeviceViewModel model;
-    private NewDevicesAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,8 +30,8 @@ public final class NewDeviceActivity extends AppCompatActivity implements NewDev
         binding = DataBindingUtil.setContentView(this, R.layout.activity_new_device);
         model = new NewDeviceViewModel(this, this);
         binding.recycler.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new NewDevicesAdapter(model);
-        binding.recycler.setAdapter(adapter);
+
+        binding.recycler.setAdapter(model.getAdapter());
         int padding = getResources().getDimensionPixelSize(R.dimen.fab_margin);
         binding.recycler.addItemDecoration(new DividerItemDecoration(getDrawable(R.drawable.divider), padding, padding));
         binding.refresh.setOnRefreshListener(model);
@@ -56,12 +55,14 @@ public final class NewDeviceActivity extends AppCompatActivity implements NewDev
     @Override
     protected void onResume() {
         super.onResume();
+        App.getInstance().setActivityVisible(true);
         model.resume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        App.getInstance().setActivityVisible(false);
         model.pause();
     }
 
@@ -81,16 +82,6 @@ public final class NewDeviceActivity extends AppCompatActivity implements NewDev
         super.onDestroy();
         binding.unbind();
         model.onDestroy();
-    }
-
-    @Override
-    public void onResult(ScanResult scanResult) {
-        adapter.add(scanResult);
-    }
-
-    @Override
-    public void clear() {
-        adapter.clear();
     }
 
     @Override

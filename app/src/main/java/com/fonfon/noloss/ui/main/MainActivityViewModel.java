@@ -20,59 +20,56 @@ import io.realm.OrderedRealmCollectionChangeListener;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public final class MainActivityViewModel extends BleViewModel implements DevicesAdapter.Listener, SwipeHelper.DeleteListener {
+public final class MainActivityViewModel extends BleViewModel implements DevicesAdapter.Listener, SwipeHelper.SwipeListener {
 
-    private DataListener dataListener;
+    private static final IntentFilter intentFilter = new IntentFilter(BleService.DEVICE_CONNECTED);
 
-    private BroadcastReceiver receiver = new BroadcastReceiver() {
+    private DevicesAdapter adapter;
+
+    static {
+        intentFilter.addAction(BleService.DEVICE_DISCONNECTED);
+    }
+
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             String address = intent.getStringExtra(BleService.DEVICE_ADDRESS);
             switch (action) {
                 case BleService.DEVICE_CONNECTED:
-                    dataListener.deviceConnected(address);
+                    adapter.deviceConnected(address);
                     break;
                 case BleService.DEVICE_DISCONNECTED:
-                    dataListener.deviceDisconnected(address);
-                    break;
-                case BleService.CONNECTED_DEVICES:
-                    String[] addresses = intent.getStringArrayExtra(BleService.DEVICES_ADDRESSES);
-                    if (addresses != null) {
-                        for (String addr : addresses) {
-                            dataListener.deviceConnected(addr);
-                        }
-                    }
+                    adapter.deviceDisconnected(address);
                     break;
             }
         }
     };
 
-    MainActivityViewModel(AppCompatActivity activity, DataListener dataListener) {
+    MainActivityViewModel(AppCompatActivity activity) {
         super(activity);
         this.activity = activity;
-        this.dataListener = dataListener;
+        adapter = new DevicesAdapter(this);
+    }
+
+    DevicesAdapter getAdapter() {
+        return adapter;
     }
 
     @Override
     public void resume() {
         super.resume();
-        IntentFilter intentFilter = new IntentFilter(BleService.DEVICE_CONNECTED);
-        intentFilter.addAction(BleService.DEVICE_DISCONNECTED);
-        intentFilter.addAction(BleService.CONNECTED_DEVICES);
         activity.registerReceiver(receiver, intentFilter);
-        BleService.checkConnectedDevices(activity);
         Realm.getDefaultInstance()
                 .where(Device.class)
                 .findAllAsync()
                 .addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<Device>>() {
                     @Override
                     public void onChange(RealmResults<Device> devices, OrderedCollectionChangeSet changeSet) {
-                        dataListener.onDevices(devices);
+                        adapter.addDevices(devices);
                         for (Device device : devices) {
                             BleService.connect(activity, device.getAddress());
                         }
-                        devices.removeAllChangeListeners();
                     }
                 });
     }
@@ -96,9 +93,8 @@ public final class MainActivityViewModel extends BleViewModel implements Devices
     }
 
     @Override
-    public void onItemDelete(final Object tag, int adapterPosition) {
-        final String tg = (String) tag;
-        dataListener.deviceDeleted(adapterPosition);
+    public void onItemDelete(int adapterPosition) {
+        final String tg = adapter.deviceDeleted(adapterPosition);
         BleService.disconnect(activity, tg);
         Realm.getDefaultInstance().executeTransactionAsync(new Realm.Transaction() {
             @Override
@@ -112,28 +108,14 @@ public final class MainActivityViewModel extends BleViewModel implements Devices
     }
 
     @Override
-    public void onItemAlert(Object tag, int adapterPosition) {
-        final String tg = (String) tag;
-        dataListener.deviceAlert(adapterPosition);
-        BleService.alert(activity, tg, dataListener.getDeviceAlertStatus(adapterPosition));
+    public void onItemAlert(int adapterPosition) {
+        final String address = adapter.deviceAlerted(adapterPosition);
+        BleService.alert(activity, address, adapter.getDeviceAlertStatus(adapterPosition));
     }
 
     @Override
     public boolean onMove(int adapterPosition) {
-        return dataListener.getDeviceAlertStatus(adapterPosition);
+        return adapter.getDeviceAlertStatus(adapterPosition);
     }
 
-    interface DataListener {
-        void onDevices(RealmResults<Device> devices);
-
-        void deviceConnected(String address);
-
-        void deviceDisconnected(String address);
-
-        void deviceDeleted(int index);
-
-        void deviceAlert(int index);
-
-        boolean getDeviceAlertStatus(int index);
-    }
 }

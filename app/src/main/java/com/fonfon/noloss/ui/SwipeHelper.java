@@ -19,31 +19,34 @@ import com.fonfon.noloss.R;
 
 public final class SwipeHelper extends ItemTouchHelper.SimpleCallback {
 
-    private Bitmap iconDelete;
-    private Bitmap iconAlertOn;
-    private Bitmap iconAlertOff;
+    private final Bitmap iconDelete;
+    private final Bitmap iconAlertOn;
+    private final Bitmap iconAlertOff;
     private Paint paint;
     private ItemTouchHelper itemTouchHelper;
     private RectF background;
     private RectF iconDest;
-    private DeleteListener deleteListener;
+    private SwipeListener deleteListener;
 
     private final int mojo;
     private final int fern;
     private final int sun;
 
-    public SwipeHelper(Context context, DeleteListener listener) {
+    public SwipeHelper(Context context, SwipeListener listener) {
         super(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT);
         this.deleteListener = listener;
         iconDelete = getBitmapFromDrawable(context, R.drawable.ic_delete);
         iconAlertOn = getBitmapFromDrawable(context, R.drawable.ic_volume_up);
         iconAlertOff = getBitmapFromDrawable(context, R.drawable.ic_volume_off);
         itemTouchHelper = new ItemTouchHelper(this);
-        paint = new Paint();
+
         mojo = ContextCompat.getColor(context, R.color.mojo);
         fern = ContextCompat.getColor(context, R.color.fern);
         sun = ContextCompat.getColor(context, R.color.sun);
+
+        paint = new Paint();
         paint.setColor(mojo);
+
         background = new RectF();
         iconDest = new RectF();
     }
@@ -52,7 +55,7 @@ public final class SwipeHelper extends ItemTouchHelper.SimpleCallback {
         itemTouchHelper.attachToRecyclerView(recyclerView);
     }
 
-    private static Bitmap getBitmapFromDrawable(Context context, @DrawableRes int drawableId) {
+    private Bitmap getBitmapFromDrawable(Context context, @DrawableRes int drawableId) {
         Drawable drawable = ContextCompat.getDrawable(context, drawableId);
 
         if (drawable instanceof BitmapDrawable) {
@@ -123,16 +126,16 @@ public final class SwipeHelper extends ItemTouchHelper.SimpleCallback {
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
         if (direction == ItemTouchHelper.RIGHT) {
-            deleteListener.onItemDelete(viewHolder.itemView.getTag(), viewHolder.getAdapterPosition());
+            deleteListener.onItemDelete(viewHolder.getAdapterPosition());
         } else {
-            deleteListener.onItemAlert(viewHolder.itemView.getTag(), viewHolder.getAdapterPosition());
+            deleteListener.onItemAlert(viewHolder.getAdapterPosition());
         }
 
     }
 
-    public interface DeleteListener {
-        void onItemDelete(Object tag, int adapterPosition);
-        void onItemAlert(Object tag, int adapterPosition);
+    public interface SwipeListener {
+        void onItemDelete(int adapterPosition);
+        void onItemAlert(int adapterPosition);
         boolean onMove(int adapterPosition);
     }
 }

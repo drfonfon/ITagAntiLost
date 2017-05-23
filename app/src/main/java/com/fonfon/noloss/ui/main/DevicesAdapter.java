@@ -6,6 +6,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.databinding.ItemDeviceBinding;
@@ -21,6 +23,7 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
     private final Listener listener;
     private List<Device> adapterData = new ArrayList<>();
     private List<String> addresses = new ArrayList<>();
+    private boolean isFirstLoad = true;
 
     DevicesAdapter(Listener listener) {
         this.listener = listener;
@@ -43,13 +46,18 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
         final String image = device.getImage();
         if (image != null) {
             Bitmap bitmap = StringBitmapConverter.stringToBitMap(image);
-            if(bitmap != null) {
+            if (bitmap != null) {
                 holder.binding.deviceImage.setImageBitmap(bitmap);
             }
         } else {
             holder.binding.deviceImage.setImageResource(R.mipmap.ic_launcher);
         }
         holder.itemView.setTag(adapterData.get(position).getAddress());
+
+        if (isFirstLoad) {
+            final Animation animShake = AnimationUtils.loadAnimation(holder.binding.getRoot().getContext(), R.anim.shake);
+            holder.binding.getRoot().startAnimation(animShake);
+        }
     }
 
     @Override
@@ -68,6 +76,7 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
     }
 
     void deviceConnected(String address) {
+        isFirstLoad = false;
         int index = addresses.indexOf(address);
         if (index != -1) {
             adapterData.get(index).setConnected(true);
@@ -76,6 +85,7 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
     }
 
     void deviceDisconnected(String address) {
+        isFirstLoad = false;
         int index = addresses.indexOf(address);
         if (index != -1) {
             adapterData.get(index).setConnected(false);
@@ -83,16 +93,21 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
         }
     }
 
-    void deviceDeleted(int index) {
+    String deviceDeleted(int index) {
+        final String address = adapterData.get(index).getAddress();
+        isFirstLoad = false;
         adapterData.remove(index);
         addresses.remove(index);
         notifyItemRemoved(index);
+        return address;
     }
 
-    void deviceAlerted(int index) {
+    String deviceAlerted(int index) {
+        isFirstLoad = false;
         Device device = adapterData.get(index);
         device.setAlarmed(!device.isAlarmed());
         notifyItemChanged(index);
+        return device.getAddress();
     }
 
     boolean getDeviceAlertStatus(int index) {

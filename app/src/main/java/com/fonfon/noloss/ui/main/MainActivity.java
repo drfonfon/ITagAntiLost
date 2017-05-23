@@ -7,33 +7,30 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 
+import com.fonfon.noloss.App;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.databinding.ActivityMainBinding;
-import com.fonfon.noloss.lib.Device;
 import com.fonfon.noloss.ui.DividerItemDecoration;
 import com.fonfon.noloss.ui.SwipeHelper;
 
-import io.realm.RealmResults;
-
-public final class MainActivity extends AppCompatActivity implements MainActivityViewModel.DataListener {
+public final class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private MainActivityViewModel model;
-    private DevicesAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-        model = new MainActivityViewModel(this, this);
+        model = new MainActivityViewModel(this);
         binding.setModel(model);
         binding.recycler.setLayoutManager(new LinearLayoutManager(this));
         int padding = getResources().getDimensionPixelSize(R.dimen.fab_margin);
         binding.recycler.addItemDecoration(
                 new DividerItemDecoration(getDrawable(R.drawable.divider), padding, padding)
         );
-        adapter = new DevicesAdapter(model);
-        binding.recycler.setAdapter(adapter);
+
+        binding.recycler.setAdapter(model.getAdapter());
 
         SwipeHelper swipeHelper = new SwipeHelper(this, model);
         swipeHelper.attachToRecyclerView(binding.recycler);
@@ -43,12 +40,14 @@ public final class MainActivity extends AppCompatActivity implements MainActivit
     @Override
     protected void onResume() {
         super.onResume();
+        App.getInstance().setActivityVisible(true);
         model.resume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        App.getInstance().setActivityVisible(false);
         model.pause();
     }
 
@@ -68,35 +67,5 @@ public final class MainActivity extends AppCompatActivity implements MainActivit
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         model.init();
-    }
-
-    @Override
-    public void onDevices(RealmResults<Device> devices) {
-        adapter.addDevices(devices);
-    }
-
-    @Override
-    public void deviceConnected(String address) {
-        adapter.deviceConnected(address);
-    }
-
-    @Override
-    public void deviceDisconnected(String address) {
-        adapter.deviceDisconnected(address);
-    }
-
-    @Override
-    public void deviceDeleted(int index) {
-        adapter.deviceDeleted(index);
-    }
-
-    @Override
-    public void deviceAlert(int index) {
-        adapter.deviceAlerted(index);
-    }
-
-    @Override
-    public boolean getDeviceAlertStatus(int index) {
-        return adapter.getDeviceAlertStatus(index);
     }
 }

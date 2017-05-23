@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import com.fonfon.noloss.App;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.databinding.ActivityDetailBinding;
 import com.fonfon.noloss.lib.Device;
@@ -45,6 +46,8 @@ public final class DetailActivity extends AppCompatActivity implements DetailAct
                 finish();
             }
         });
+        binding.toolbar.inflateMenu(R.menu.device_detail);
+        binding.toolbar.setOnMenuItemClickListener(model);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(model);
@@ -53,12 +56,14 @@ public final class DetailActivity extends AppCompatActivity implements DetailAct
     @Override
     protected void onResume() {
         super.onResume();
+        App.getInstance().setActivityVisible(true);
         model.resume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        App.getInstance().setActivityVisible(false);
         model.pause();
     }
 
@@ -94,11 +99,5 @@ public final class DetailActivity extends AppCompatActivity implements DetailAct
         else
             binding.deviceImage.setImageResource(R.mipmap.ic_launcher);
     }
-
-    @Override
-    public void onTitle(String title) {
-        binding.toolbar.setTitle(title);
-    }
-
 
 }

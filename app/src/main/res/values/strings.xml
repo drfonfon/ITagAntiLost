@@ -27,5 +27,7 @@
     <string name="ble_permission">Permission is required to determine the position and work bluetooth</string>
     <string name="load_image_error">Could not load image</string>
     <string name="save_image_error">Could not save image</string>
+    <string name="map_title">Devices map</string>
+    <string name="delete">Delete</string>
 
 </resources>

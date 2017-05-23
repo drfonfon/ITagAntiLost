@@ -50,13 +50,6 @@ public final class BleService extends Service {
         );
     }
 
-    public static void checkConnectedDevices(Context context) {
-        context.startService(
-                new Intent(context, BleService.class)
-                        .setAction(BleService.CONNECTED_DEVICES)
-        );
-    }
-
     public static void checkBattery(Context context) {
         context.startService(
                 new Intent(context, BleService.class)
@@ -96,13 +89,11 @@ public final class BleService extends Service {
 
     public static final String DEVICE_ADDRESS = "DEVICE_ADDRESS";
     public static final String BATTERY_LEVEL = "BATTERY_LEVEL";
-    public static final String DEVICES_ADDRESSES = "DEVICES_ADDRESSES";
 
     public static final String CONNECT = "CONNECT";
     public static final String START_ALARM = "START_ALARM";
     public static final String STOP_ALARM = "STOP_ALARM";
     public static final String DISCONNECT = "DISCONNECT";
-    public static final String CONNECTED_DEVICES = "CONNECTED_DEVICES";
     public static final String CHECK_BATTERY = "CHECK_BATTERY";
     public static final String STOP_SERVICE = "STOP_SERVICE_?";
 
@@ -159,7 +150,7 @@ public final class BleService extends Service {
             gatt.close();
             BluetoothGatt gat = bluetoothGatt.get(gatt.getDevice().getAddress());
             if (gat != null) {
-                bluetoothGatt.remove(gat.getDevice().getName());
+                bluetoothGatt.remove(gat.getDevice().getAddress());
             }
             if (bluetoothGatt.size() == 0) {
                 stopSelf();
@@ -261,13 +252,6 @@ public final class BleService extends Service {
 
             if (action != null) {
                 switch (action) {
-                    case CONNECTED_DEVICES:
-                        String[] addrecces = bluetoothGatt.keySet().toArray(new String[bluetoothGatt.size()]);
-                        sendBroadcast(
-                                new Intent(CONNECTED_DEVICES)
-                                        .putExtra(DEVICES_ADDRESSES, addrecces)
-                        );
-                        break;
                     case STOP_SERVICE:
                         if (bluetoothGatt.size() == 0) {
                             stopSelf();

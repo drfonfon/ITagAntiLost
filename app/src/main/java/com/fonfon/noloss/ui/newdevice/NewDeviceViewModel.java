@@ -26,6 +26,8 @@ final class NewDeviceViewModel extends BleViewModel implements NewDevicesAdapter
 
     private DataListener dataListener;
 
+    private NewDevicesAdapter adapter;
+
     private Handler handler;
     private Runnable stopScan;
     private List<String> currentAddresses = new ArrayList<>();
@@ -39,7 +41,7 @@ final class NewDeviceViewModel extends BleViewModel implements NewDevicesAdapter
                 for (ParcelUuid uuid : uuids) {
                     if (uuid.getUuid().equals(BleService.FIND_ME_SERVICE)) {
                         if (!currentAddresses.contains(result.getDevice().getAddress()))
-                            dataListener.onResult(result);
+                            adapter.add(result);
                         break;
                     }
                 }
@@ -52,7 +54,20 @@ final class NewDeviceViewModel extends BleViewModel implements NewDevicesAdapter
         this.activity = activity;
         this.dataListener = dataListener;
 
+        adapter = new NewDevicesAdapter(this);
         handler = new Handler();
+        stopScan = new Runnable() {
+            @Override
+            public void run() {
+                handler.removeCallbacks(stopScan);
+                bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
+                NewDeviceViewModel.this.dataListener.setRefresh(false);
+            }
+        };
+    }
+
+    NewDevicesAdapter getAdapter() {
+        return adapter;
     }
 
     @Override
@@ -80,15 +95,7 @@ final class NewDeviceViewModel extends BleViewModel implements NewDevicesAdapter
                         }
                         devices.removeAllChangeListeners();
                         dataListener.setRefresh(true);
-                        dataListener.clear();
-                        stopScan = new Runnable() {
-                            @Override
-                            public void run() {
-                                handler.removeCallbacks(stopScan);
-                                bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
-                                dataListener.setRefresh(false);
-                            }
-                        };
+                        adapter.clear();
                         handler.postDelayed(stopScan, SCAN_PERIOD);
                         bluetoothAdapter.getBluetoothLeScanner().startScan(scanCallback);
                     }
@@ -97,28 +104,26 @@ final class NewDeviceViewModel extends BleViewModel implements NewDevicesAdapter
 
     @Override
     public void onDevice(final ScanResult result) {
-        Device.addToRealm(
-                result,
-                new Realm.Transaction.OnSuccess() {
+        Realm.getDefaultInstance()
+                .executeTransactionAsync(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.copyToRealmOrUpdate(new Device(result));
+                    }
+                }, new Realm.Transaction.OnSuccess() {
                     @Override
                     public void onSuccess() {
                         activity.finish();
                     }
-                },
-                new Realm.Transaction.OnError() {
+                }, new Realm.Transaction.OnError() {
                     @Override
                     public void onError(Throwable error) {
                         Toast.makeText(activity, R.string.add_device_error, Toast.LENGTH_SHORT).show();
                     }
-                }
-        );
+                });
     }
 
     interface DataListener {
-        void onResult(ScanResult scanResult);
-
-        void clear();
-
         void setRefresh(boolean isRefreshing);
     }
 }
