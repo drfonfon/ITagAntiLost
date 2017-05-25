@@ -6,8 +6,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
@@ -43,7 +46,7 @@ public final class ClickBroadcastReceiver extends BroadcastReceiver {
                     final LocationListener locationListener = new LocationListener() {
                         @Override
                         public void onLocationChanged(final Location location) {
-                            if(location != null) {
+                            if (location != null) {
                                 updateDeviceLocation(context, device, location);
                                 LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
                                 googleApiClient.disconnect();
@@ -100,18 +103,28 @@ public final class ClickBroadcastReceiver extends BroadcastReceiver {
                 device.setLocation(location);
             }
         });
+
+        Bitmap bitmap;
+        if (device.getAddress() != null) {
+            bitmap = BitmapUtils.stringToBitMap(device.getAddress());
+        } else {
+            bitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher);
+        }
+
         ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
-                .notify(device.doHash(),
-                        new NotificationCompat.Builder(context)
-                                .setSmallIcon(R.drawable.ic_find_key)
-                                .setContentTitle(context.getString(R.string.app_name))
-                                .setContentText(device.getName() + " " + context.getString(R.string.location_updated))
-                                .build()
+                .notify(device.doHash(), new NotificationCompat.Builder(context)
+                        .setLargeIcon(bitmap)
+                        .setSmallIcon(R.drawable.ic_find_key)
+                        .setContentTitle(context.getString(R.string.app_name))
+                        .setContentText(device.getName() + " " + context.getString(R.string.location_updated))
+                        .setVibrate(new long[]{1000, 1000})
+                        .setSound(Settings.System.DEFAULT_NOTIFICATION_URI)
+                        .build()
                 );
         context.sendBroadcast(
                 new Intent(LOCATION_CHANGED)
-                .putExtra(BleService.DEVICE_ADDRESS, device.getAddress())
-                .putExtra(LOCATION, location)
+                        .putExtra(BleService.DEVICE_ADDRESS, device.getAddress())
+                        .putExtra(LOCATION, location)
         );
     }
 
@@ -123,5 +136,5 @@ public final class ClickBroadcastReceiver extends BroadcastReceiver {
                 .build();
     }
 
-    
+
 }

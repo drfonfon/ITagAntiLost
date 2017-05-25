@@ -19,12 +19,11 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.fonfon.noloss.R;
-import com.fonfon.noloss.lib.BitmapTransform;
+import com.fonfon.noloss.lib.BitmapUtils;
 import com.fonfon.noloss.lib.BleService;
 import com.fonfon.noloss.lib.ClickBroadcastReceiver;
 import com.fonfon.noloss.lib.Device;
 import com.fonfon.noloss.lib.SaveImageService;
-import com.fonfon.noloss.lib.StringBitmapConverter;
 import com.fonfon.noloss.ui.BleViewModel;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -104,18 +103,17 @@ public final class DetailActivityViewModel extends BleViewModel implements OnMap
         batteryLevel.set(device.getBatteryLevel());
         isAlarmed.set(device.isAlarmed());
         isConnected.set(device.isConnected());
-        dataListener.onImage(StringBitmapConverter.stringToBitMap(device.getImage()));
+        dataListener.onImage(BitmapUtils.stringToBitMap(device.getImage()));
     }
 
     @Override
     public void resume() {
         activity.registerReceiver(receiver, intentFilter);
         BleService.connect(activity, device.getAddress());
-        BleService.checkBattery(activity);
     }
 
     void pause() {
-        BleService.stopService(activity);
+        activity.startService(new Intent(activity, BleService.class));
         activity.unregisterReceiver(receiver);
         if (!isDeleted && !device.getName().equals(name.get())) {
             Realm.getDefaultInstance().beginTransaction();
@@ -133,7 +131,7 @@ public final class DetailActivityViewModel extends BleViewModel implements OnMap
                     final Uri selectedImage = data.getData();
                     SaveImageService.start(activity, selectedImage, device.getAddress());
                     try {
-                        final Bitmap bitmap = BitmapTransform.transform(
+                        final Bitmap bitmap = BitmapUtils.transform(
                                 MediaStore.Images.Media.getBitmap(activity.getContentResolver(), selectedImage)
                         );
                         dataListener.onImage(bitmap);
@@ -153,9 +151,9 @@ public final class DetailActivityViewModel extends BleViewModel implements OnMap
     }
 
     public void alertClick(View view) {
-        BleService.alert(activity, device.getAddress(), device.isAlarmed());
         device.setAlarmed(!device.isAlarmed());
         isAlarmed.set(device.isAlarmed());
+        BleService.alert(activity, device.getAddress(), device.isAlarmed());
     }
 
     @Override

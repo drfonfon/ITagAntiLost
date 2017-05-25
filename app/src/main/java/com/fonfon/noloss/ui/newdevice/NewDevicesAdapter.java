@@ -17,12 +17,17 @@ final class NewDevicesAdapter extends RecyclerView.Adapter<NewDevicesAdapter.Hol
 
     private final NewDevicesAdapter.Listener listener;
 
-    NewDevicesAdapter(NewDevicesAdapter.Listener listener) {
+    NewDevicesAdapter(
+            NewDevicesAdapter.Listener listener
+    ) {
         this.listener = listener;
     }
 
     @Override
-    public NewDevicesAdapter.Holder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public NewDevicesAdapter.Holder onCreateViewHolder(
+            ViewGroup parent,
+            int viewType
+    ) {
         return new NewDevicesAdapter.Holder(
                 ItemNewDeviceBinding.inflate(
                         LayoutInflater.from(parent.getContext()),
@@ -32,7 +37,10 @@ final class NewDevicesAdapter extends RecyclerView.Adapter<NewDevicesAdapter.Hol
     }
 
     @Override
-    public void onBindViewHolder(Holder holder, int position) {
+    public void onBindViewHolder(
+            Holder holder,
+            int position
+    ) {
         ScanResult result = new ArrayList<>(devices.values()).get(position);
         holder.binding.setName(result.getScanRecord().getDeviceName());
         holder.binding.setAddress(result.getDevice().getAddress());

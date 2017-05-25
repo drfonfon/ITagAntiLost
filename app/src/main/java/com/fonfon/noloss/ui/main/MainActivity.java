@@ -27,27 +27,29 @@ public final class MainActivity extends AppCompatActivity {
         binding.recycler.setLayoutManager(new LinearLayoutManager(this));
         int padding = getResources().getDimensionPixelSize(R.dimen.fab_margin);
         binding.recycler.addItemDecoration(
-                new DividerItemDecoration(getDrawable(R.drawable.divider), padding, padding)
+                new DividerItemDecoration(getDrawable(R.drawable.divider), padding)
         );
 
         binding.recycler.setAdapter(model.getAdapter());
 
-        SwipeHelper swipeHelper = new SwipeHelper(this, model);
-        swipeHelper.attachToRecyclerView(binding.recycler);
+        binding.toolbar.inflateMenu(R.menu.main);
+        binding.toolbar.setOnMenuItemClickListener(model);
+
+        new SwipeHelper(this, model, binding.recycler);
         model.init();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        App.getInstance().setActivityVisible(true);
+        App.getInstance().setVisibleAddress(App.ALL_ADDRESSES);
         model.resume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        App.getInstance().setActivityVisible(false);
+        App.getInstance().setVisibleAddress(null);
         model.pause();
     }
 

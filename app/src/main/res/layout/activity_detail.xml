@@ -118,6 +118,7 @@
                     android:layout_marginBottom="8dp"
                     android:fontFamily="monospace"
                     android:gravity="center"
+                    android:visibility="@{model.batteryLevel > 0 ? View.VISIBLE : View.GONE}"
                     android:text="@{String.format(@string/battery_level, model.batteryLevel)}"
                     android:textColor="@color/oil"
                     android:layout_marginEnd="16dp"

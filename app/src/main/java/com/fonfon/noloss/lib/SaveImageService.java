@@ -43,7 +43,7 @@ public final class SaveImageService extends IntentService {
                     @Override
                     public void execute(Realm realm) {
                         try {
-                            final Bitmap bitmap = BitmapTransform.transform(
+                            final Bitmap bitmap = BitmapUtils.transform(
                                     MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri)
                             );
                             Device device = realm.where(Device.class).equalTo(Device.ADDRESS, address).findFirst();

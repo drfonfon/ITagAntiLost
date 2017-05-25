@@ -12,10 +12,10 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 
 import com.fonfon.noloss.R;
+import com.fonfon.noloss.lib.BitmapUtils;
 import com.fonfon.noloss.lib.BleService;
 import com.fonfon.noloss.lib.ClickBroadcastReceiver;
 import com.fonfon.noloss.lib.Device;
-import com.fonfon.noloss.lib.StringBitmapConverter;
 import com.fonfon.noloss.ui.BleViewModel;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -113,7 +113,7 @@ class MapActivityViewModel extends BleViewModel implements OnMapReadyCallback {
             markers.add(marker);
             String image = device.getImage();
             if (image != null) {
-                Bitmap bitmap = StringBitmapConverter.stringToBitMap(device.getImage());
+                Bitmap bitmap = BitmapUtils.stringToBitMap(device.getImage());
                 if (bitmap != null) {
                     Bitmap bmp = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
                     marker.setIcon(BitmapDescriptorFactory.fromBitmap(bmp));

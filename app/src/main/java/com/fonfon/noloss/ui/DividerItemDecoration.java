@@ -8,22 +8,16 @@ import android.view.View;
 
 public final class DividerItemDecoration extends RecyclerView.ItemDecoration {
 
-    private Drawable divider;
-    private int leftPadding = 0;
-    private int rightPadding = 0;
+    private final Drawable divider;
+    private final int padding;
 
-    public DividerItemDecoration(Drawable divider) {
+    public DividerItemDecoration(Drawable divider, int padding) {
         this.divider = divider;
-    }
-
-    public DividerItemDecoration(Drawable divider, int leftPadding, int rightPadding) {
-        this.divider = divider;
-        this.leftPadding = leftPadding;
-        this.rightPadding = rightPadding;
+        this.padding = padding;
     }
 
     @Override
-    public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
+    public final void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
         super.onDraw(c, parent, state);
         drawVertical(c, parent);
     }
@@ -33,18 +27,17 @@ public final class DividerItemDecoration extends RecyclerView.ItemDecoration {
         final int right = parent.getWidth() - parent.getPaddingRight();
         for (int i = 0, childCount = parent.getChildCount(); i < childCount - 1; i++) {
             final int top = parent.getChildAt(i).getBottom();
-            divider.setBounds(left + leftPadding, top, right - rightPadding, top + divider.getIntrinsicHeight());
+            divider.setBounds(left + padding, top, right - padding, top + divider.getIntrinsicHeight());
             divider.draw(c);
         }
     }
 
     @Override
-    public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+    public final void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
         super.getItemOffsets(outRect, view, parent, state);
         if (parent.getChildAdapterPosition(view) == 0) {
             return;
         }
         outRect.top = divider.getIntrinsicHeight();
     }
-
 }

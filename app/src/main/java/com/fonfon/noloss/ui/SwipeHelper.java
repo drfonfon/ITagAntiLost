@@ -5,11 +5,8 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.VectorDrawable;
 import android.support.annotation.DrawableRes;
-import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -22,23 +19,26 @@ public final class SwipeHelper extends ItemTouchHelper.SimpleCallback {
     private final Bitmap iconDelete;
     private final Bitmap iconAlertOn;
     private final Bitmap iconAlertOff;
-    private Paint paint;
-    private ItemTouchHelper itemTouchHelper;
-    private RectF background;
-    private RectF iconDest;
-    private SwipeListener deleteListener;
+    private final Paint paint;
+    private final RectF background;
+    private final RectF iconDest;
+    private final SwipeListener deleteListener;
 
     private final int mojo;
     private final int fern;
     private final int sun;
 
-    public SwipeHelper(Context context, SwipeListener listener) {
+    public SwipeHelper(
+            Context context,
+            SwipeListener listener,
+            RecyclerView recyclerView
+    ) {
         super(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT);
         this.deleteListener = listener;
         iconDelete = getBitmapFromDrawable(context, R.drawable.ic_delete);
         iconAlertOn = getBitmapFromDrawable(context, R.drawable.ic_volume_up);
         iconAlertOff = getBitmapFromDrawable(context, R.drawable.ic_volume_off);
-        itemTouchHelper = new ItemTouchHelper(this);
+        new ItemTouchHelper(this).attachToRecyclerView(recyclerView);
 
         mojo = ContextCompat.getColor(context, R.color.mojo);
         fern = ContextCompat.getColor(context, R.color.fern);
@@ -49,33 +49,38 @@ public final class SwipeHelper extends ItemTouchHelper.SimpleCallback {
 
         background = new RectF();
         iconDest = new RectF();
+
     }
 
-    public void attachToRecyclerView(RecyclerView recyclerView) {
-        itemTouchHelper.attachToRecyclerView(recyclerView);
-    }
-
-    private Bitmap getBitmapFromDrawable(Context context, @DrawableRes int drawableId) {
+    private Bitmap getBitmapFromDrawable(
+            Context context,
+            @DrawableRes int drawableId
+    ) {
         Drawable drawable = ContextCompat.getDrawable(context, drawableId);
 
-        if (drawable instanceof BitmapDrawable) {
-            return ((BitmapDrawable) drawable).getBitmap();
-        } else if (drawable instanceof VectorDrawable || drawable instanceof VectorDrawableCompat) {
-            Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(bitmap);
-            drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-            drawable.draw(canvas);
+        Bitmap bitmap = Bitmap.createBitmap(
+                drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight(),
+                Bitmap.Config.ARGB_8888
+        );
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
 
-            return bitmap;
-        } else {
-            throw new IllegalArgumentException("unsupported drawable type");
-        }
+        return bitmap;
     }
 
     @Override
-    public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+    public void onChildDraw(
+            Canvas c,
+            RecyclerView recyclerView,
+            RecyclerView.ViewHolder viewHolder,
+            float dX,
+            float dY,
+            int actionState,
+            boolean isCurrentlyActive
+    ) {
         if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
-
             View itemView = viewHolder.itemView;
             float height = (float) itemView.getBottom() - (float) itemView.getTop();
             float width = height / 3;
@@ -125,17 +130,17 @@ public final class SwipeHelper extends ItemTouchHelper.SimpleCallback {
 
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-        if (direction == ItemTouchHelper.RIGHT) {
+        if (direction == ItemTouchHelper.RIGHT)
             deleteListener.onItemDelete(viewHolder.getAdapterPosition());
-        } else {
+        else
             deleteListener.onItemAlert(viewHolder.getAdapterPosition());
-        }
-
     }
 
     public interface SwipeListener {
         void onItemDelete(int adapterPosition);
+
         void onItemAlert(int adapterPosition);
+
         boolean onMove(int adapterPosition);
     }
 }

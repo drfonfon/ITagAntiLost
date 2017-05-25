@@ -6,19 +6,23 @@ import io.realm.Realm;
 
 public final class App extends Application {
 
+    public static final String ALL_ADDRESSES = "ALL_ADDRESSES";
+
     private static App instance;
     public static App getInstance() {
         return instance;
     }
 
-    private boolean activityVisible = false;
+    private String visibleAddress = null;
 
-    public void setActivityVisible(boolean activityVisible) {
-        this.activityVisible = activityVisible;
+    public void setVisibleAddress(
+            String visibleAddress
+    ) {
+        this.visibleAddress = visibleAddress;
     }
 
-    public boolean isActivityVisible() {
-        return activityVisible;
+    public String getVisibleAddress() {
+        return visibleAddress;
     }
 
     @Override

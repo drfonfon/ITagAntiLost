@@ -5,7 +5,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -15,6 +14,8 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
@@ -27,42 +28,62 @@ import java.util.UUID;
 
 public final class BleService extends Service {
 
-    public static void connect(Context context, String address) {
-        context.startService(
-                new Intent(context, BleService.class)
-                        .setAction(BleService.CONNECT)
-                        .putExtra(BleService.DEVICE_ADDRESS, address)
-        );
+    /**
+     * Connect device from address
+     *
+     * @param context start context
+     * @param address BLE device address FF:FF:FF:FF:FF:FF format
+     */
+    public static void connect(
+            Context context,
+            String address
+    ) {
+        if (context != null && address != null) {
+            context.startService(
+                    new Intent(context, BleService.class)
+                            .setAction(BleService.CONNECT)
+                            .putExtra(BleService.DEVICE_ADDRESS, address)
+            );
+        }
     }
 
-    public static void alert(Context context, String address, boolean alert) {
-        context.startService(
-                new Intent(context, BleService.class)
-                        .setAction(alert ? BleService.START_ALARM : BleService.STOP_ALARM)
-                        .putExtra(BleService.DEVICE_ADDRESS, address)
-        );
+    /**
+     * Alert device from address
+     *
+     * @param context start context
+     * @param address BLE device address FF:FF:FF:FF:FF:FF format
+     * @param alert   alert - on/off
+     */
+    public static void alert(
+            Context context,
+            String address,
+            boolean alert
+    ) {
+        if (context != null && address != null) {
+            context.startService(
+                    new Intent(context, BleService.class)
+                            .setAction(alert ? BleService.START_ALARM : BleService.STOP_ALARM)
+                            .putExtra(BleService.DEVICE_ADDRESS, address)
+            );
+        }
     }
 
-    public static void stopService(Context context) {
-        context.startService(
-                new Intent(context, BleService.class)
-                        .setAction(BleService.STOP_SERVICE)
-        );
-    }
-
-    public static void checkBattery(Context context) {
-        context.startService(
-                new Intent(context, BleService.class)
-                        .setAction(BleService.CHECK_BATTERY)
-        );
-    }
-
-    public static void disconnect(Context context, String address) {
-        context.startService(
-                new Intent(context, BleService.class)
-                        .setAction(BleService.DISCONNECT)
-                        .putExtra(BleService.DEVICE_ADDRESS, address)
-        );
+    /**
+     * Disconnect device from address
+     * @param context start context
+     * @param address BLE device address FF:FF:FF:FF:FF:FF format
+     */
+    public static void disconnect(
+            Context context,
+            String address
+    ) {
+        if (context != null && address != null) {
+            context.startService(
+                    new Intent(context, BleService.class)
+                            .setAction(BleService.DISCONNECT)
+                            .putExtra(BleService.DEVICE_ADDRESS, address)
+            );
+        }
     }
 
     /**
@@ -94,8 +115,6 @@ public final class BleService extends Service {
     public static final String START_ALARM = "START_ALARM";
     public static final String STOP_ALARM = "STOP_ALARM";
     public static final String DISCONNECT = "DISCONNECT";
-    public static final String CHECK_BATTERY = "CHECK_BATTERY";
-    public static final String STOP_SERVICE = "STOP_SERVICE_?";
 
     public static final String DEVICE_CONNECTED = "DEVICE_CONNECTED";
     public static final String DEVICE_DISCONNECTED = "DEVICE_DISCONNECTED";
@@ -199,7 +218,7 @@ public final class BleService extends Service {
                 int status
         ) {
             super.onCharacteristicRead(gatt, characteristic, status);
-            if (characteristic.getValue() != null && characteristic.getValue().length > 0) {
+            if(batteryCharacteristic.getUuid().equals(characteristic.getUuid())) {
                 sendBroadcast(
                         new Intent(BATTERY_LEVEL_UPDATED)
                                 .putExtra(DEVICE_ADDRESS, gatt.getDevice().getAddress())
@@ -246,46 +265,28 @@ public final class BleService extends Service {
             int flags,
             int startId
     ) {
-        if (intent != null) {
+        if (intent != null && bluetoothAdapter != null) {
             String action = intent.getAction();
             String address = intent.getStringExtra(DEVICE_ADDRESS);
 
-            if (action != null) {
+            if (action != null && address != null) {
                 switch (action) {
-                    case STOP_SERVICE:
-                        if (bluetoothGatt.size() == 0) {
-                            stopSelf();
-                        }
+                    case CONNECT:
+                        connect(address);
                         break;
-                    default:
-                        if (address != null && bluetoothAdapter != null) {
-                            BluetoothDevice bluetoothDevice = bluetoothAdapter.getRemoteDevice(address);
-                            if (bluetoothDevice != null) {
-                                switch (action) {
-                                    case CONNECT:
-                                        connect(bluetoothDevice);
-                                        break;
-                                    case DISCONNECT:
-                                        disconnect(bluetoothDevice);
-                                        break;
-                                    case START_ALARM:
-                                        immediateAlert(bluetoothDevice.getAddress(), ALERT_START);
-                                        break;
-                                    case STOP_ALARM:
-                                        immediateAlert(bluetoothDevice.getAddress(), ALERT_STOP);
-                                        break;
-                                    case CHECK_BATTERY:
-                                        BluetoothGatt gatt = bluetoothGatt.get(bluetoothDevice.getAddress());
-                                        if (gatt != null && batteryCharacteristic != null) {
-                                            gatt.readCharacteristic(batteryCharacteristic);
-                                        }
-                                        break;
-                                }
-                            }
-                        }
+                    case DISCONNECT:
+                        disconnect(address);
+                        break;
+                    case START_ALARM:
+                        immediateAlert(address, ALERT_START);
+                        break;
+                    case STOP_ALARM:
+                        immediateAlert(address, ALERT_STOP);
                         break;
                 }
             }
+        } else if (bluetoothGatt.size() == 0) {
+            stopSelf();
         }
 
         return START_STICKY;
@@ -317,12 +318,12 @@ public final class BleService extends Service {
     }
 
     private boolean connect(
-            @NonNull BluetoothDevice result
+            @NonNull String address
     ) {
         if (bluetoothAdapter == null) {
             return false;
         }
-        result.connectGatt(this, false, callback);
+        bluetoothAdapter.getRemoteDevice(address).connectGatt(this, false, callback);
         return true;
     }
 
@@ -337,14 +338,14 @@ public final class BleService extends Service {
     }
 
     private void disconnect(
-            @NonNull BluetoothDevice result
+            @NonNull String address
     ) {
         if (bluetoothAdapter == null) {
             return;
         }
-        if (bluetoothGatt.get(result.getAddress()) != null) {
-            bluetoothGatt.get(result.getAddress()).disconnect();
-            bluetoothGatt.remove(result.getAddress());
+        if (bluetoothGatt.get(address) != null) {
+            bluetoothGatt.get(address).disconnect();
+            bluetoothGatt.remove(address);
         }
     }
 
@@ -408,7 +409,9 @@ public final class BleService extends Service {
         PendingIntent resultPendingIntent = PendingIntent.getActivity(
                 this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT
         );
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
         return new NotificationCompat.Builder(this)
+                .setLargeIcon(bitmap)
                 .setSmallIcon(R.drawable.ic_find_key)
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText(text)

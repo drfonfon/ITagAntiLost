@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 import android.view.View;
 
 import com.fonfon.noloss.lib.BleService;
@@ -20,28 +22,31 @@ import io.realm.OrderedRealmCollectionChangeListener;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public final class MainActivityViewModel extends BleViewModel implements DevicesAdapter.Listener, SwipeHelper.SwipeListener {
+public final class MainActivityViewModel extends BleViewModel implements DevicesAdapter.Listener, SwipeHelper.SwipeListener, Toolbar.OnMenuItemClickListener {
 
     private static final IntentFilter intentFilter = new IntentFilter(BleService.DEVICE_CONNECTED);
-
-    private DevicesAdapter adapter;
 
     static {
         intentFilter.addAction(BleService.DEVICE_DISCONNECTED);
     }
 
+    private final DevicesAdapter adapter;
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            String address = intent.getStringExtra(BleService.DEVICE_ADDRESS);
-            switch (action) {
-                case BleService.DEVICE_CONNECTED:
-                    adapter.deviceConnected(address);
-                    break;
-                case BleService.DEVICE_DISCONNECTED:
-                    adapter.deviceDisconnected(address);
-                    break;
+            if(intent != null) {
+                String action = intent.getAction();
+                String address = intent.getStringExtra(BleService.DEVICE_ADDRESS);
+                if(action != null && address != null) {
+                    switch (action) {
+                        case BleService.DEVICE_CONNECTED:
+                            adapter.deviceConnected(address);
+                            break;
+                        case BleService.DEVICE_DISCONNECTED:
+                            adapter.deviceDisconnected(address);
+                            break;
+                    }
+                }
             }
         }
     };
@@ -75,7 +80,7 @@ public final class MainActivityViewModel extends BleViewModel implements Devices
     }
 
     void pause() {
-        BleService.stopService(activity);
+        activity.startService(new Intent(activity, BleService.class));
         activity.unregisterReceiver(receiver);
     }
 
@@ -118,4 +123,8 @@ public final class MainActivityViewModel extends BleViewModel implements Devices
         return adapter.getDeviceAlertStatus(adapterPosition);
     }
 
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        return false;
+    }
 }

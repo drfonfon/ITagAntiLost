@@ -27,12 +27,13 @@ public final class DetailActivity extends AppCompatActivity implements DetailAct
 
     private ActivityDetailBinding binding;
     private DetailActivityViewModel model;
+    private String address;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_detail);
-        String address = getIntent().getStringExtra(Device.ADDRESS);
+        address = getIntent().getStringExtra(Device.ADDRESS);
         if (address == null) {
             finish();
         }
@@ -56,14 +57,14 @@ public final class DetailActivity extends AppCompatActivity implements DetailAct
     @Override
     protected void onResume() {
         super.onResume();
-        App.getInstance().setActivityVisible(true);
+        App.getInstance().setVisibleAddress(address);
         model.resume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        App.getInstance().setActivityVisible(false);
+        App.getInstance().setVisibleAddress(null);
         model.pause();
     }
 

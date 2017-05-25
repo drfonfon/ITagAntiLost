@@ -125,13 +125,6 @@ public class Device extends RealmObject implements Parcelable {
         }
     }
 
-    public Location getLocation() {
-        Location location = new Location("device");
-        location.setLatitude(latitude);
-        location.setLongitude(longitude);
-        return location;
-    }
-
     public LatLng getPosition() {
         return new LatLng(latitude, longitude);
     }

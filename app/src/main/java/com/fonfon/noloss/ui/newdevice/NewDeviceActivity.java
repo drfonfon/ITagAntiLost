@@ -9,7 +9,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.view.View;
 
-import com.fonfon.noloss.App;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.databinding.ActivityNewDeviceBinding;
 import com.fonfon.noloss.ui.DividerItemDecoration;
@@ -33,7 +32,7 @@ public final class NewDeviceActivity extends AppCompatActivity implements NewDev
 
         binding.recycler.setAdapter(model.getAdapter());
         int padding = getResources().getDimensionPixelSize(R.dimen.fab_margin);
-        binding.recycler.addItemDecoration(new DividerItemDecoration(getDrawable(R.drawable.divider), padding, padding));
+        binding.recycler.addItemDecoration(new DividerItemDecoration(getDrawable(R.drawable.divider), padding));
         binding.refresh.setOnRefreshListener(model);
 
         binding.toolbar.setNavigationIcon(R.drawable.ic_back);
@@ -55,14 +54,12 @@ public final class NewDeviceActivity extends AppCompatActivity implements NewDev
     @Override
     protected void onResume() {
         super.onResume();
-        App.getInstance().setActivityVisible(true);
         model.resume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        App.getInstance().setActivityVisible(false);
         model.pause();
     }
 

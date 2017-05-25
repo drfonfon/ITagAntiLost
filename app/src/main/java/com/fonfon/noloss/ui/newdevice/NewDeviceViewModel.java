@@ -49,7 +49,10 @@ final class NewDeviceViewModel extends BleViewModel implements NewDevicesAdapter
         }
     };
 
-    NewDeviceViewModel(AppCompatActivity activity, DataListener dataListener) {
+    NewDeviceViewModel(
+            AppCompatActivity activity,
+            DataListener dataListener
+    ) {
         super(activity);
         this.activity = activity;
         this.dataListener = dataListener;
@@ -103,7 +106,9 @@ final class NewDeviceViewModel extends BleViewModel implements NewDevicesAdapter
     }
 
     @Override
-    public void onDevice(final ScanResult result) {
+    public void onDevice(
+            final ScanResult result
+    ) {
         Realm.getDefaultInstance()
                 .executeTransactionAsync(new Realm.Transaction() {
                     @Override
