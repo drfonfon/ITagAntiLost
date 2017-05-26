@@ -70,12 +70,18 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
     }
 
     String getDeviceAddressFrom(int index) {
-        return devices.get(index).getAddress();
+        if (index > -1 && index < devices.size())
+            return devices.get(index).getAddress();
+        return null;
     }
 
-    void deviceDeleted(int index) {
-        devices.remove(index);
-        notifyItemRemoved(index);
+    boolean deviceDeleted(int index) {
+        if (index > -1 && index < devices.size()) {
+            devices.remove(index);
+            notifyItemRemoved(index);
+            return true;
+        }
+        return false;
     }
 
     class Holder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -104,6 +110,7 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
 
     interface Listener {
         void onDeviceClick(String address);
+
         void onDeviceAlerted(String address, boolean isAlerted);
     }
 }

@@ -95,28 +95,37 @@ public final class MainActivityViewModel extends BleViewModel implements
     @Override
     public void onItemDelete(final int adapterPosition) {
         final String address = adapter.getDeviceAddressFrom(adapterPosition);
-        Realm.getDefaultInstance().executeTransactionAsync(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                Device device = realm.where(Device.class).equalTo(Device.ADDRESS, address).findFirst();
-                if (device != null) {
-                    device.deleteFromRealm();
+        if(address != null) {
+            Realm.getDefaultInstance().executeTransactionAsync(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    Device device = realm.where(Device.class).equalTo(Device.ADDRESS, address).findFirst();
+                    if (device != null) {
+                        device.deleteFromRealm();
+                    }
                 }
-            }
-        }, new Realm.Transaction.OnSuccess() {
-            @Override
-            public void onSuccess() {
-                BleService.disconnect(activity, address);
-                adapter.deviceDeleted(adapterPosition);
-            }
-        }, new Realm.Transaction.OnError() {
-            @Override
-            public void onError(Throwable error) {
-                adapter.notifyItemChanged(adapterPosition);
-                Toast.makeText(activity, R.string.delete_error, Toast.LENGTH_SHORT).show();
-            }
-        });
+            }, new Realm.Transaction.OnSuccess() {
+                @Override
+                public void onSuccess() {
+                    BleService.disconnect(activity, address);
+                    if(!adapter.deviceDeleted(adapterPosition)) {
+                        onDeleteError(adapterPosition);
+                    }
+                }
+            }, new Realm.Transaction.OnError() {
+                @Override
+                public void onError(Throwable error) {
+                    onDeleteError(adapterPosition);
+                }
+            });
+        } else {
+            onDeleteError(adapterPosition);
+        }
+    }
 
+    private void onDeleteError(int adapterPosition) {
+        adapter.notifyItemChanged(adapterPosition);
+        Toast.makeText(activity, R.string.delete_error, Toast.LENGTH_SHORT).show();
     }
 
     @Override
