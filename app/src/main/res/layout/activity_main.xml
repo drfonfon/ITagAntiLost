@@ -16,16 +16,11 @@
         android:orientation="vertical">
 
         <android.support.design.widget.AppBarLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+            style="@style/AppTheme.AppBar">
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?android:actionBarSize"
-                android:background="@color/mariner"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+                style="@style/AppTheme.Toolbar"
                 app:title="@string/app_name" />
 
         </android.support.design.widget.AppBarLayout>
@@ -45,19 +40,15 @@
         </android.support.v4.widget.SwipeRefreshLayout>
 
         <android.support.design.widget.FloatingActionButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/AppTheme.Fab"
             android:layout_gravity="bottom|end"
-            android:layout_margin="16dp"
             android:onClick="@{() -> model.searchClick()}"
             android:src="@drawable/ic_search"
             app:fabSize="mini" />
 
         <android.support.design.widget.FloatingActionButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/AppTheme.Fab"
             android:layout_gravity="bottom|center"
-            android:layout_margin="16dp"
             android:onClick="@{() -> model.mapCLick()}"
             android:src="@drawable/ic_map"
             app:fabSize="normal" />

@@ -31,7 +31,7 @@ public final class NewDeviceActivity extends AppCompatActivity implements NewDev
         binding.recycler.setLayoutManager(new LinearLayoutManager(this));
 
         binding.recycler.setAdapter(model.getAdapter());
-        int padding = getResources().getDimensionPixelSize(R.dimen.fab_margin);
+        int padding = getResources().getDimensionPixelSize(R.dimen.spacing_normal);
         binding.recycler.addItemDecoration(new DividerItemDecoration(getDrawable(R.drawable.divider), padding));
         binding.refresh.setOnRefreshListener(model);
 

@@ -13,17 +13,12 @@
         android:orientation="vertical">
 
         <android.support.design.widget.AppBarLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+            style="@style/AppTheme.AppBar">
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?android:actionBarSize"
-                android:background="@color/mariner"
-                app:title="@string/select_device"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+                style="@style/AppTheme.Toolbar"
+                app:title="@string/select_device" />
 
         </android.support.design.widget.AppBarLayout>
 

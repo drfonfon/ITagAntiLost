@@ -10,7 +10,7 @@ import android.widget.Toast;
 
 import com.fonfon.noloss.App;
 import com.fonfon.noloss.R;
-import com.fonfon.noloss.lib.BleService;
+import com.fonfon.noloss.BleService;
 import com.fonfon.noloss.lib.Device;
 import com.fonfon.noloss.ui.BleViewModel;
 import com.fonfon.noloss.ui.detail.DetailActivity;

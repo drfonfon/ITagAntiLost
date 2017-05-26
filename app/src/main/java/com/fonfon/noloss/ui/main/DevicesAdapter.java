@@ -1,5 +1,6 @@
 package com.fonfon.noloss.ui.main;
 
+import android.databinding.ObservableBoolean;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -34,6 +35,7 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
     @Override
     public void onBindViewHolder(final Holder holder, int position) {
         holder.binding.setDevice(devices.get(position));
+        holder.binding.connect.setConnect(new ObservableBoolean(devices.get(position).isConnected()));
     }
 
     @Override

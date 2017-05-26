@@ -17,17 +17,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingBottom="8dp"
-        android:paddingEnd="16dp"
-        android:paddingStart="16dp"
-        android:paddingTop="4dp">
+        android:paddingBottom="@dimen/spacing_small"
+        android:paddingEnd="@dimen/spacing_normal"
+        android:paddingStart="@dimen/spacing_normal"
+        android:paddingTop="@dimen/spacing_small">
 
         <android.support.v7.widget.AppCompatTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@{name}"
             android:textColor="@color/oil"
-            android:textSize="18sp"
+            android:textSize="@dimen/text_size_large"
             android:textStyle="bold"
             android:fontFamily="monospace"
             tools:text="name" />
@@ -37,7 +37,7 @@
             android:layout_height="wrap_content"
             android:text="@{address}"
             android:textColor="@color/oil"
-            android:textSize="12sp"
+            android:textSize="@dimen/text_size_small"
             android:fontFamily="monospace"
             tools:text="AA:BB:CC:DDD" />
 

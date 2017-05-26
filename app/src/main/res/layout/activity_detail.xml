@@ -16,16 +16,11 @@
         android:layout_height="match_parent">
 
         <android.support.design.widget.AppBarLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:theme="@style/AppTheme.AppBarOverlay">
+            style="@style/AppTheme.AppBar">
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
-                app:popupTheme="@style/AppTheme.PopupOverlay"
+                style="@style/AppTheme.Toolbar"
                 app:title="@{model.device.name}" />
 
         </android.support.design.widget.AppBarLayout>
@@ -41,67 +36,42 @@
                 android:gravity="center_horizontal"
                 android:orientation="vertical">
 
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:layout_marginTop="16dp">
+                <android.support.v7.widget.AppCompatImageView
+                    android:id="@+id/device_image"
+                    android:layout_width="116dp"
+                    android:layout_height="116dp"
+                    android:layout_marginBottom="@dimen/spacing_normal"
+                    android:layout_marginTop="@dimen/spacing_normal"
+                    android:layout_gravity="center"
+                    android:onClick="@{() -> model.imageClick()}"
+                    android:src="@mipmap/ic_launcher"
+                    app:stringImage="@{model.stringImage}"/>
 
-                    <android.support.v7.widget.AppCompatImageView
-                        android:id="@+id/device_image"
-                        android:layout_width="116dp"
-                        android:layout_height="116dp"
-                        android:layout_gravity="center"
-                        android:onClick="@{() -> model.imageClick()}"
-                        android:src="@mipmap/ic_launcher"
-                        app:stringImage="@{model.stringImage}"/>
-
-                </FrameLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:orientation="horizontal">
-
-                    <android.support.v7.widget.AppCompatTextView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:background="@drawable/selector_connection"
-                        android:enabled="@{model.isConnected}" />
-
-                    <android.support.v7.widget.AppCompatTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:fontFamily="monospace"
-                        android:paddingEnd="8dp"
-                        android:paddingLeft="8dp"
-                        android:paddingRight="8dp"
-                        android:paddingStart="8dp"
-                        android:text="@{model.isConnected ? @string/status_connected : @string/status_disconnected }"
-                        android:textSize="14sp" />
-
-                </LinearLayout>
+                <include
+                    android:id="@+id/connect"
+                    layout="@layout/layout_connect"
+                    />
 
                 <android.support.v7.widget.AppCompatTextView
+                    android:layout_marginTop="8dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginStart="16dp"
+                    android:layout_marginBottom="@dimen/spacing_normal"
+                    android:layout_marginEnd="@dimen/spacing_normal"
+                    android:layout_marginStart="@dimen/spacing_normal"
                     android:fontFamily="monospace"
                     android:gravity="center"
                     android:text="@{model.device.address}"
                     android:textColor="@color/oil"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/text_size_large"
                     android:textStyle="bold" />
 
                 <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginStart="16dp">
+                    android:layout_marginEnd="@dimen/spacing_normal"
+                    android:layout_marginStart="@dimen/spacing_normal"
+                    android:layout_marginBottom="@dimen/spacing_normal">
 
                     <android.support.v7.widget.AppCompatEditText
                         android:layout_width="match_parent"
@@ -110,7 +80,10 @@
                         android:hint="@string/device_name"
                         android:maxLength="32"
                         android:maxLines="1"
-                        android:text="@={model.name}" />
+                        android:lines="1"
+                        android:inputType="textCapSentences"
+                        android:text="@={model.name}"
+                        android:imeOptions="actionDone"/>
                 </android.support.design.widget.TextInputLayout>
 
                 <fragment
@@ -118,8 +91,8 @@
                     class="com.google.android.gms.maps.SupportMapFragment"
                     android:layout_width="match_parent"
                     android:layout_height="150dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="@dimen/spacing_normal"
+                    android:layout_marginStart="@dimen/spacing_normal"
                     app:liteMode="true" />
 
             </LinearLayout>
@@ -128,10 +101,8 @@
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/AppTheme.Fab"
             android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/fab_margin"
             android:onClick="@{() -> model.alertClick()}"
             android:src="@{model.isAlarmed ? @drawable/ic_volume_off : @drawable/ic_volume_up}"
             android:visibility="@{model.isConnected ? View.VISIBLE : View.GONE}" />

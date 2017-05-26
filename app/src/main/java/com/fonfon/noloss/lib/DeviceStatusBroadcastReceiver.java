@@ -9,6 +9,7 @@ import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 
 import com.fonfon.noloss.App;
+import com.fonfon.noloss.BleService;
 import com.fonfon.noloss.R;
 
 import io.realm.Realm;

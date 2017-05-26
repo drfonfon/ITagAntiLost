@@ -11,7 +11,7 @@ import android.widget.Toast;
 
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.lib.BitmapUtils;
-import com.fonfon.noloss.lib.BleService;
+import com.fonfon.noloss.BleService;
 import com.fonfon.noloss.lib.Device;
 import com.fonfon.noloss.ui.BleViewModel;
 

@@ -35,6 +35,7 @@ public final class DetailActivity extends AppCompatActivity {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_detail);
         model = new DetailActivityViewModel(this, address);
         binding.setModel(model);
+        binding.connect.setConnect(model.isConnected);
 
         binding.toolbar.setNavigationIcon(R.drawable.ic_back);
         binding.toolbar.setNavigationOnClickListener(new View.OnClickListener() {

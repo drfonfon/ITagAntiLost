@@ -15,6 +15,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 
 import com.fonfon.geohash.GeoHash;
+import com.fonfon.noloss.BleService;
 import com.fonfon.noloss.R;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -25,7 +26,7 @@ import io.realm.Realm;
 
 public class LocationChangeService extends IntentService {
 
-    public static final String LOCATION_CHANGED = "LOCATION_CHANGED";
+    public static final String LOCATION_CHANGED = "com.fonfon.noloss.LOCATION_CHANGED";
     public static final String LOCATION = "LOCATION";
 
     public LocationChangeService() {

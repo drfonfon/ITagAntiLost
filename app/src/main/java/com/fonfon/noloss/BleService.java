@@ -1,4 +1,4 @@
-package com.fonfon.noloss.lib;
+package com.fonfon.noloss;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -20,7 +20,6 @@ import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 
-import com.fonfon.noloss.R;
 import com.fonfon.noloss.ui.main.MainActivity;
 
 import java.util.HashMap;
@@ -98,9 +97,9 @@ public final class BleService extends Service {
     public static final String STOP_ALARM = "STOP_ALARM";
     public static final String DISCONNECT = "DISCONNECT";
 
-    public static final String DEVICE_CONNECTED = "DEVICE_CONNECTED";
-    public static final String DEVICE_DISCONNECTED = "DEVICE_DISCONNECTED";
-    public static final String DEVICE_BUTTON_CLICKED = "DEVICE_BUTTON_CLICKED";
+    public static final String DEVICE_CONNECTED = "com.fonfon.noloss.DEVICE_CONNECTED";
+    public static final String DEVICE_DISCONNECTED = "com.fonfon.noloss.DEVICE_DISCONNECTED";
+    public static final String DEVICE_BUTTON_CLICKED = "com.fonfon.noloss.DEVICE_BUTTON_CLICKED";
 
     public static final int NOTIFICATION_ID = 7007;
     public static final int NOTIFICATION_ERROR_ID = 7008;
