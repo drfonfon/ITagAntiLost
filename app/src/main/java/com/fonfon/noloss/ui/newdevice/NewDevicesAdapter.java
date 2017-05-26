@@ -1,6 +1,5 @@
 package com.fonfon.noloss.ui.newdevice;
 
-import android.bluetooth.le.ScanResult;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,13 +7,12 @@ import android.view.ViewGroup;
 
 import com.fonfon.noloss.databinding.ItemNewDeviceBinding;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 final class NewDevicesAdapter extends RecyclerView.Adapter<NewDevicesAdapter.Holder> {
 
-    private HashMap<String, ScanResult> devices = new HashMap<>();
-
+    private final HashMap<String, String> devices = new HashMap<>();
     private final NewDevicesAdapter.Listener listener;
 
     NewDevicesAdapter(
@@ -37,13 +35,11 @@ final class NewDevicesAdapter extends RecyclerView.Adapter<NewDevicesAdapter.Hol
     }
 
     @Override
-    public void onBindViewHolder(
-            Holder holder,
-            int position
-    ) {
-        ScanResult result = new ArrayList<>(devices.values()).get(position);
-        holder.binding.setName(result.getScanRecord().getDeviceName());
-        holder.binding.setAddress(result.getDevice().getAddress());
+    public void onBindViewHolder(Holder holder, int position) {
+        Set<String> keySet = devices.keySet();
+        String[] addresses = keySet.toArray(new String[keySet.size()]);
+        holder.binding.setName(devices.get(addresses[position]));
+        holder.binding.setAddress(addresses[position]);
     }
 
     @Override
@@ -51,8 +47,8 @@ final class NewDevicesAdapter extends RecyclerView.Adapter<NewDevicesAdapter.Hol
         return devices.size();
     }
 
-    void add(ScanResult scanResult) {
-        devices.put(scanResult.getDevice().getAddress(), scanResult);
+    void add(String address, String name) {
+        devices.put(address, name);
         notifyDataSetChanged();
     }
 
@@ -73,12 +69,12 @@ final class NewDevicesAdapter extends RecyclerView.Adapter<NewDevicesAdapter.Hol
 
         @Override
         public void onClick(View v) {
-            listener.onDevice(new ArrayList<>(devices.values()).get(getAdapterPosition()));
+            listener.onDevice(binding.getAddress(), binding.getName());
         }
     }
 
     interface Listener {
-        void onDevice(ScanResult result);
+        void onDevice(String address, String name);
     }
 }
 

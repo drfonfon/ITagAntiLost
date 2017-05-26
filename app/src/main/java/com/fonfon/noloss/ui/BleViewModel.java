@@ -26,9 +26,7 @@ public class BleViewModel {
     public AppCompatActivity activity;
     public BluetoothAdapter bluetoothAdapter;
 
-    public BleViewModel(
-            AppCompatActivity activity
-    ) {
+    public BleViewModel(AppCompatActivity activity) {
         this.activity = activity;
     }
 
@@ -75,11 +73,7 @@ public class BleViewModel {
         }
     }
 
-    public void onActivityResult(
-            int requestCode,
-            int resultCode,
-            Intent data
-    ) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_ENABLE_BT) resume();
     }
 

@@ -7,11 +7,13 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.Base64;
 
+import java.io.ByteArrayOutputStream;
+
 public final class BitmapUtils {
 
     private static final int BITMAP_SCALE = 256;
 
-    public static Bitmap transform(Bitmap source) {
+    private static Bitmap transform(Bitmap source) {
         int size = Math.min(source.getWidth(), source.getHeight());
 
         Bitmap squaredBitmap = Bitmap.createBitmap(
@@ -40,6 +42,16 @@ public final class BitmapUtils {
         return result;
     }
 
+    public static String bitmapToString(Bitmap bmp) {
+        final Bitmap bitmap = BitmapUtils.transform(bmp);
+        bmp.recycle();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        String imageString = Base64.encodeToString(baos.toByteArray(), Base64.DEFAULT);
+        bitmap.recycle();
+        return imageString;
+    }
+
     public static Bitmap stringToBitMap(String encodedString) {
         try {
             byte[] encodeByte = Base64.decode(encodedString, Base64.DEFAULT);
@@ -48,4 +60,5 @@ public final class BitmapUtils {
             return null;
         }
     }
+
 }

@@ -32,7 +32,7 @@ dependencies {
     compile 'com.android.support:design:25.3.1'
     compile 'com.google.android.gms:play-services-maps:10.2.6'
     compile 'com.google.android.gms:play-services-location:10.2.6'
-    compile 'com.github.rjsvieira:circularView:1.1.0'
     compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.github.drfonfon:android-geohash:0.3'
     testCompile 'junit:junit:4.12'
 }

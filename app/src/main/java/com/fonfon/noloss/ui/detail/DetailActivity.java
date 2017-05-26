@@ -3,41 +3,37 @@ package com.fonfon.noloss.ui.detail;
 import android.app.Activity;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-import com.fonfon.noloss.App;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.databinding.ActivityDetailBinding;
 import com.fonfon.noloss.lib.Device;
 import com.google.android.gms.maps.SupportMapFragment;
 
-public final class DetailActivity extends AppCompatActivity implements DetailActivityViewModel.DataListener {
+public final class DetailActivity extends AppCompatActivity {
 
     public static void show(Activity context, String deviceAddress) {
-        context.startActivity(
-                new Intent(context, DetailActivity.class)
-                        .putExtra(Device.ADDRESS, deviceAddress)
+        context.startActivity(new Intent(context, DetailActivity.class)
+                .putExtra(Device.ADDRESS, deviceAddress)
         );
         context.overridePendingTransition(R.anim.slide_left, R.anim.no_change);
     }
 
     private ActivityDetailBinding binding;
     private DetailActivityViewModel model;
-    private String address;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_detail);
-        address = getIntent().getStringExtra(Device.ADDRESS);
+        String address = getIntent().getStringExtra(Device.ADDRESS);
         if (address == null) {
             finish();
         }
-        model = new DetailActivityViewModel(this, address, this);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_detail);
+        model = new DetailActivityViewModel(this, address);
         binding.setModel(model);
 
         binding.toolbar.setNavigationIcon(R.drawable.ic_back);
@@ -57,14 +53,12 @@ public final class DetailActivity extends AppCompatActivity implements DetailAct
     @Override
     protected void onResume() {
         super.onResume();
-        App.getInstance().setVisibleAddress(address);
         model.resume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        App.getInstance().setVisibleAddress(null);
         model.pause();
     }
 
@@ -91,14 +85,6 @@ public final class DetailActivity extends AppCompatActivity implements DetailAct
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         model.init();
-    }
-
-    @Override
-    public void onImage(Bitmap bitmap) {
-        if (bitmap != null)
-            binding.deviceImage.setImageBitmap(bitmap);
-        else
-            binding.deviceImage.setImageResource(R.mipmap.ic_launcher);
     }
 
 }

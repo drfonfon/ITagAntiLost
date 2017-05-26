@@ -7,12 +7,10 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
-import android.util.Base64;
 import android.widget.Toast;
 
 import com.fonfon.noloss.R;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import io.realm.Realm;
@@ -42,17 +40,20 @@ public final class SaveImageService extends IntentService {
                 Realm.getDefaultInstance().executeTransactionAsync(new Realm.Transaction() {
                     @Override
                     public void execute(Realm realm) {
-                        try {
-                            final Bitmap bitmap = BitmapUtils.transform(
-                                    MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri)
-                            );
-                            Device device = realm.where(Device.class).equalTo(Device.ADDRESS, address).findFirst();
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-                            device.setImage(Base64.encodeToString(baos.toByteArray(), Base64.DEFAULT));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            Toast.makeText(getApplicationContext(), R.string.save_image_error, Toast.LENGTH_SHORT).show();
+                        Device device = realm.where(Device.class).equalTo(Device.ADDRESS, address).findFirst();
+                        if (device != null) {
+                            try {
+                                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+                                if (bitmap != null) {
+                                    String image = BitmapUtils.bitmapToString(bitmap);
+                                    device.setImage(image);
+                                } else {
+                                    Toast.makeText(getApplicationContext(), R.string.save_image_error, Toast.LENGTH_SHORT).show();
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                Toast.makeText(getApplicationContext(), R.string.save_image_error, Toast.LENGTH_SHORT).show();
+                            }
                         }
                     }
                 });

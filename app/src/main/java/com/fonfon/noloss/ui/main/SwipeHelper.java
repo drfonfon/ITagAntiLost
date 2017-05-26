@@ -1,4 +1,4 @@
-package com.fonfon.noloss.ui;
+package com.fonfon.noloss.ui.main;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -14,48 +14,32 @@ import android.view.View;
 
 import com.fonfon.noloss.R;
 
-public final class SwipeHelper extends ItemTouchHelper.SimpleCallback {
+final class SwipeHelper extends ItemTouchHelper.SimpleCallback {
 
     private final Bitmap iconDelete;
-    private final Bitmap iconAlertOn;
-    private final Bitmap iconAlertOff;
     private final Paint paint;
     private final RectF background;
     private final RectF iconDest;
     private final SwipeListener deleteListener;
 
     private final int mojo;
-    private final int fern;
-    private final int sun;
 
-    public SwipeHelper(
-            Context context,
-            SwipeListener listener,
-            RecyclerView recyclerView
-    ) {
-        super(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT);
+    SwipeHelper(SwipeListener listener, RecyclerView recyclerView) {
+        super(0, ItemTouchHelper.LEFT);
         this.deleteListener = listener;
-        iconDelete = getBitmapFromDrawable(context, R.drawable.ic_delete);
-        iconAlertOn = getBitmapFromDrawable(context, R.drawable.ic_volume_up);
-        iconAlertOff = getBitmapFromDrawable(context, R.drawable.ic_volume_off);
+        iconDelete = getBitmapFromDrawable(recyclerView.getContext(), R.drawable.ic_delete);
         new ItemTouchHelper(this).attachToRecyclerView(recyclerView);
 
-        mojo = ContextCompat.getColor(context, R.color.mojo);
-        fern = ContextCompat.getColor(context, R.color.fern);
-        sun = ContextCompat.getColor(context, R.color.sun);
+        mojo = ContextCompat.getColor(recyclerView.getContext(), R.color.mojo);
 
         paint = new Paint();
         paint.setColor(mojo);
 
         background = new RectF();
         iconDest = new RectF();
-
     }
 
-    private Bitmap getBitmapFromDrawable(
-            Context context,
-            @DrawableRes int drawableId
-    ) {
+    private Bitmap getBitmapFromDrawable(Context context, @DrawableRes int drawableId) {
         Drawable drawable = ContextCompat.getDrawable(context, drawableId);
 
         Bitmap bitmap = Bitmap.createBitmap(
@@ -71,23 +55,15 @@ public final class SwipeHelper extends ItemTouchHelper.SimpleCallback {
     }
 
     @Override
-    public void onChildDraw(
-            Canvas c,
-            RecyclerView recyclerView,
-            RecyclerView.ViewHolder viewHolder,
-            float dX,
-            float dY,
-            int actionState,
-            boolean isCurrentlyActive
-    ) {
+    public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
+            float dX, float dY, int actionState, boolean isCurrentlyActive) {
         if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
             View itemView = viewHolder.itemView;
             float height = (float) itemView.getBottom() - (float) itemView.getTop();
             float width = height / 3;
 
             if (dX < 0) {
-                boolean isAlarmed = deleteListener.onMove(viewHolder.getAdapterPosition());
-                paint.setColor(isAlarmed ? sun : fern);
+                paint.setColor(mojo);
                 background.set(
                         (float) itemView.getRight() + dX,
                         (float) itemView.getTop(),
@@ -99,22 +75,6 @@ public final class SwipeHelper extends ItemTouchHelper.SimpleCallback {
                         (float) itemView.getRight() - 2 * width,
                         (float) itemView.getTop() + width,
                         (float) itemView.getRight() - width,
-                        (float) itemView.getBottom() - width
-                );
-                c.drawBitmap(isAlarmed ? iconAlertOff : iconAlertOn, null, iconDest, paint);
-            } else {
-                paint.setColor(mojo);
-                background.set(
-                        (float) itemView.getLeft(),
-                        (float) itemView.getTop(),
-                        dX,
-                        (float) itemView.getBottom()
-                );
-                c.drawRect(background, paint);
-                iconDest.set(
-                        (float) itemView.getLeft() + width,
-                        (float) itemView.getTop() + width,
-                        (float) itemView.getLeft() + 2 * width,
                         (float) itemView.getBottom() - width
                 );
                 c.drawBitmap(iconDelete, null, iconDest, paint);
@@ -130,17 +90,10 @@ public final class SwipeHelper extends ItemTouchHelper.SimpleCallback {
 
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-        if (direction == ItemTouchHelper.RIGHT)
-            deleteListener.onItemDelete(viewHolder.getAdapterPosition());
-        else
-            deleteListener.onItemAlert(viewHolder.getAdapterPosition());
+        deleteListener.onItemDelete(viewHolder.getAdapterPosition());
     }
 
-    public interface SwipeListener {
+    interface SwipeListener {
         void onItemDelete(int adapterPosition);
-
-        void onItemAlert(int adapterPosition);
-
-        boolean onMove(int adapterPosition);
     }
 }

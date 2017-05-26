@@ -1,17 +1,12 @@
 package com.fonfon.noloss.ui.main;
 
-import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 
-import com.fonfon.noloss.R;
 import com.fonfon.noloss.databinding.ItemDeviceBinding;
-import com.fonfon.noloss.lib.BitmapUtils;
 import com.fonfon.noloss.lib.Device;
 
 import java.util.ArrayList;
@@ -21,8 +16,7 @@ import java.util.List;
 final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
 
     private final Listener listener;
-    private List<Device> adapterData = new ArrayList<>();
-    private boolean isFirstLoad = true;
+    private final List<Device> devices = new ArrayList<>();
 
     DevicesAdapter(Listener listener) {
         this.listener = listener;
@@ -32,49 +26,31 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
     public Holder onCreateViewHolder(ViewGroup parent, int viewType) {
         return new Holder(
                 ItemDeviceBinding.inflate(
-                        LayoutInflater.from(parent.getContext()),
-                        parent, false
+                        LayoutInflater.from(parent.getContext()), parent, false
                 )
         );
     }
 
     @Override
     public void onBindViewHolder(final Holder holder, int position) {
-        Device device = adapterData.get(position);
-        holder.binding.setDevice(device);
-        final String image = device.getImage();
-        if (image != null) {
-            Bitmap bitmap = BitmapUtils.stringToBitMap(image);
-            if (bitmap != null) {
-                holder.binding.deviceImage.setImageBitmap(bitmap);
-            }
-        } else {
-            holder.binding.deviceImage.setImageResource(R.mipmap.ic_launcher);
-        }
-        holder.itemView.setTag(adapterData.get(position).getAddress());
-
-        if (isFirstLoad) {
-            final Animation animShake = AnimationUtils.loadAnimation(holder.binding.getRoot().getContext(), R.anim.shake);
-            holder.binding.getRoot().startAnimation(animShake);
-        }
+        holder.binding.setDevice(devices.get(position));
     }
 
     @Override
     public int getItemCount() {
-        return adapterData.size();
+        return devices.size();
     }
 
     void addDevices(@NonNull Collection<Device> devices) {
-        adapterData.clear();
-        adapterData.addAll(devices);
+        this.devices.clear();
+        this.devices.addAll(devices);
         notifyDataSetChanged();
     }
 
     void deviceConnected(String address) {
-        isFirstLoad = false;
-        for (int i = 0; i < adapterData.size(); i++) {
-            if (adapterData.get(i).getAddress().equals(address)) {
-                adapterData.get(i).setConnected(true);
+        for (int i = 0; i < devices.size(); i++) {
+            if (devices.get(i).getAddress().equals(address)) {
+                devices.get(i).setConnected(true);
                 notifyItemChanged(i);
                 break;
             }
@@ -82,53 +58,50 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
     }
 
     void deviceDisconnected(String address) {
-        isFirstLoad = false;
-        for (int i = 0; i < adapterData.size(); i++) {
-            if (adapterData.get(i).getAddress().equals(address)) {
-                adapterData.get(i).setConnected(false);
+        for (int i = 0; i < devices.size(); i++) {
+            if (devices.get(i).getAddress().equals(address)) {
+                devices.get(i).setConnected(false);
                 notifyItemChanged(i);
                 break;
             }
         }
     }
 
-    String deviceDeleted(int index) {
-        final String address = adapterData.get(index).getAddress();
-        isFirstLoad = false;
-        adapterData.remove(index);
+    String getDeviceAddressFrom(int index) {
+        return devices.get(index).getAddress();
+    }
+
+    void deviceDeleted(int index) {
+        devices.remove(index);
         notifyItemRemoved(index);
-        return address;
-    }
-
-    String deviceAlerted(int index) {
-        isFirstLoad = false;
-        Device device = adapterData.get(index);
-        device.setAlarmed(!device.isAlarmed());
-        notifyItemChanged(index);
-        return device.getAddress();
-    }
-
-    boolean getDeviceAlertStatus(int index) {
-        return adapterData.get(index).isAlarmed();
     }
 
     class Holder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private final ItemDeviceBinding binding;
 
-        Holder(ItemDeviceBinding binding) {
+        Holder(final ItemDeviceBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
             this.binding.getRoot().setOnClickListener(this);
+            this.binding.setAlarm(false);
+            this.binding.fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    binding.setAlarm(!binding.getAlarm());
+                    listener.onDeviceAlerted(binding.getDevice().getAddress(), binding.getAlarm());
+                }
+            });
         }
 
         @Override
         public void onClick(View v) {
-            listener.onDeviceClick(adapterData.get(getAdapterPosition()));
+            listener.onDeviceClick(devices.get(getAdapterPosition()).getAddress());
         }
     }
 
     interface Listener {
-        void onDeviceClick(Device device);
+        void onDeviceClick(String address);
+        void onDeviceAlerted(String address, boolean isAlerted);
     }
 }

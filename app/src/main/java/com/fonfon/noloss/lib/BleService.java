@@ -34,15 +34,11 @@ public final class BleService extends Service {
      * @param context start context
      * @param address BLE device address FF:FF:FF:FF:FF:FF format
      */
-    public static void connect(
-            Context context,
-            String address
-    ) {
+    public static void connect(Context context, String address) {
         if (context != null && address != null) {
-            context.startService(
-                    new Intent(context, BleService.class)
-                            .setAction(BleService.CONNECT)
-                            .putExtra(BleService.DEVICE_ADDRESS, address)
+            context.startService(new Intent(context, BleService.class)
+                    .setAction(BleService.CONNECT)
+                    .putExtra(BleService.DEVICE_ADDRESS, address)
             );
         }
     }
@@ -54,34 +50,26 @@ public final class BleService extends Service {
      * @param address BLE device address FF:FF:FF:FF:FF:FF format
      * @param alert   alert - on/off
      */
-    public static void alert(
-            Context context,
-            String address,
-            boolean alert
-    ) {
+    public static void alert(Context context, String address, boolean alert) {
         if (context != null && address != null) {
-            context.startService(
-                    new Intent(context, BleService.class)
-                            .setAction(alert ? BleService.START_ALARM : BleService.STOP_ALARM)
-                            .putExtra(BleService.DEVICE_ADDRESS, address)
+            context.startService(new Intent(context, BleService.class)
+                    .setAction(alert ? BleService.START_ALARM : BleService.STOP_ALARM)
+                    .putExtra(BleService.DEVICE_ADDRESS, address)
             );
         }
     }
 
     /**
      * Disconnect device from address
+     *
      * @param context start context
      * @param address BLE device address FF:FF:FF:FF:FF:FF format
      */
-    public static void disconnect(
-            Context context,
-            String address
-    ) {
+    public static void disconnect(Context context, String address) {
         if (context != null && address != null) {
-            context.startService(
-                    new Intent(context, BleService.class)
-                            .setAction(BleService.DISCONNECT)
-                            .putExtra(BleService.DEVICE_ADDRESS, address)
+            context.startService(new Intent(context, BleService.class)
+                    .setAction(BleService.DISCONNECT)
+                    .putExtra(BleService.DEVICE_ADDRESS, address)
             );
         }
     }
@@ -99,17 +87,11 @@ public final class BleService extends Service {
     public static final UUID ALERT_LEVEL_CHARACTERISTIC = UUID.fromString("00002a06-0000-1000-8000-00805f9b34fb");
 
     /**
-     * @see <a href="https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.service.battery_service.xml">battery_service</a>
-     */
-    public static final UUID BATTERY_SERVICE = UUID.fromString("0000180f-0000-1000-8000-00805f9b34fb");
-
-    /**
      * @see <a href="https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml">client_characteristic_configuration</a>
      */
     public static final UUID CLIENT_CHARACTERISTIC_CONFIG = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
     public static final String DEVICE_ADDRESS = "DEVICE_ADDRESS";
-    public static final String BATTERY_LEVEL = "BATTERY_LEVEL";
 
     public static final String CONNECT = "CONNECT";
     public static final String START_ALARM = "START_ALARM";
@@ -118,7 +100,6 @@ public final class BleService extends Service {
 
     public static final String DEVICE_CONNECTED = "DEVICE_CONNECTED";
     public static final String DEVICE_DISCONNECTED = "DEVICE_DISCONNECTED";
-    public static final String BATTERY_LEVEL_UPDATED = "BATTERY_LEVEL_UPDATED";
     public static final String DEVICE_BUTTON_CLICKED = "DEVICE_BUTTON_CLICKED";
 
     public static final int NOTIFICATION_ID = 7007;
@@ -127,29 +108,34 @@ public final class BleService extends Service {
     public static final int ALERT_STOP = 0;
     public static final int ALERT_START = 2;
 
+    private final class BlePair {
+        BluetoothGatt gatt;
+        BluetoothGattCharacteristic alertCharacteristic;
+
+        BlePair(BluetoothGatt gatt) {
+            this.gatt = gatt;
+        }
+    }
+
+    private final HashMap<String, BlePair> bluetoothGatt = new HashMap<>();
+
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter bluetoothAdapter;
-    private HashMap<String, BluetoothGatt> bluetoothGatt = new HashMap<>();
 
     private BluetoothGattCharacteristic buttonCharacteristic;
-    private BluetoothGattService immediateAlertService;
-    private BluetoothGattCharacteristic alertCharacteristic;
-    private BluetoothGattCharacteristic batteryCharacteristic;
 
-    private BluetoothGattCallback callback = new BluetoothGattCallback() {
+    private final BluetoothGattCallback callback = new BluetoothGattCallback() {
 
         @Override
-        public void onConnectionStateChange(
-                final BluetoothGatt gatt,
-                int status,
-                int newState
-        ) {
+        public void onConnectionStateChange(final BluetoothGatt gatt, int status, int newState) {
             if (BluetoothGatt.GATT_SUCCESS == status) {
-                if (newState == BluetoothProfile.STATE_CONNECTED) {
-                    onConnected(gatt);
-                }
-                if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    onDisconnected(gatt);
+                switch (newState) {
+                    case BluetoothProfile.STATE_CONNECTED:
+                        onConnected(gatt);
+                        break;
+                    case BluetoothProfile.STATE_DISCONNECTED:
+                        onDisconnected(gatt);
+                        break;
                 }
             } else {
                 onDisconnected(gatt);
@@ -158,7 +144,7 @@ public final class BleService extends Service {
 
         private void onConnected(BluetoothGatt gatt) {
             gatt.discoverServices();
-            bluetoothGatt.put(gatt.getDevice().getAddress(), gatt);
+            bluetoothGatt.put(gatt.getDevice().getAddress(), new BlePair(gatt));
             sendBroadcast(
                     new Intent(DEVICE_CONNECTED)
                             .putExtra(DEVICE_ADDRESS, gatt.getDevice().getAddress())
@@ -167,39 +153,32 @@ public final class BleService extends Service {
 
         private void onDisconnected(BluetoothGatt gatt) {
             gatt.close();
-            BluetoothGatt gat = bluetoothGatt.get(gatt.getDevice().getAddress());
-            if (gat != null) {
-                bluetoothGatt.remove(gat.getDevice().getAddress());
+            BlePair pair = bluetoothGatt.get(gatt.getDevice().getAddress());
+            if (pair != null) {
+                bluetoothGatt.remove(gatt.getDevice().getAddress());
+                sendBroadcast(
+                        new Intent(DEVICE_DISCONNECTED)
+                                .putExtra(DEVICE_ADDRESS, gatt.getDevice().getAddress())
+                );
             }
             if (bluetoothGatt.size() == 0) {
                 stopSelf();
             }
-            sendBroadcast(
-                    new Intent(DEVICE_DISCONNECTED)
-                            .putExtra(DEVICE_ADDRESS, gatt.getDevice()
-                                    .getAddress())
-            );
         }
 
         @Override
-        public void onServicesDiscovered(
-                BluetoothGatt gatt,
-                int status
-        ) {
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             for (BluetoothGattService service : gatt.getServices()) {
                 if (IMMEDIATE_ALERT_SERVICE.equals(service.getUuid())) {
-                    immediateAlertService = service;
-                    alertCharacteristic = getCharacteristic(
-                            gatt,
-                            IMMEDIATE_ALERT_SERVICE,
-                            ALERT_LEVEL_CHARACTERISTIC
-                    );
-                    gatt.readCharacteristic(alertCharacteristic);
-                }
-
-                if (BATTERY_SERVICE.equals(service.getUuid())) {
-                    batteryCharacteristic = service.getCharacteristics().get(0);
-                    gatt.readCharacteristic(batteryCharacteristic);
+                    BlePair pair = bluetoothGatt.get(gatt.getDevice().getAddress());
+                    if (pair != null) {
+                        pair.alertCharacteristic = getCharacteristic(
+                                gatt,
+                                IMMEDIATE_ALERT_SERVICE,
+                                ALERT_LEVEL_CHARACTERISTIC
+                        );
+                        gatt.readCharacteristic(pair.alertCharacteristic);
+                    }
                 }
 
                 if (FIND_ME_SERVICE.equals(service.getUuid())) {
@@ -208,22 +187,6 @@ public final class BleService extends Service {
                         setCharacteristicNotification(gatt, buttonCharacteristic, true);
                     }
                 }
-            }
-        }
-
-        @Override
-        public void onCharacteristicRead(
-                BluetoothGatt gatt,
-                BluetoothGattCharacteristic characteristic,
-                int status
-        ) {
-            super.onCharacteristicRead(gatt, characteristic, status);
-            if(batteryCharacteristic.getUuid().equals(characteristic.getUuid())) {
-                sendBroadcast(
-                        new Intent(BATTERY_LEVEL_UPDATED)
-                                .putExtra(DEVICE_ADDRESS, gatt.getDevice().getAddress())
-                                .putExtra(BATTERY_LEVEL, characteristic.getValue()[0])
-                );
             }
         }
 
@@ -240,12 +203,6 @@ public final class BleService extends Service {
                 );
             }
         }
-
-        @Override
-        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-            super.onDescriptorWrite(gatt, descriptor, status);
-            gatt.readCharacteristic(batteryCharacteristic);
-        }
     };
 
     @Override
@@ -260,11 +217,7 @@ public final class BleService extends Service {
     }
 
     @Override
-    public int onStartCommand(
-            Intent intent,
-            int flags,
-            int startId
-    ) {
+    public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && bluetoothAdapter != null) {
             String action = intent.getAction();
             String address = intent.getStringExtra(DEVICE_ADDRESS);
@@ -284,6 +237,8 @@ public final class BleService extends Service {
                         immediateAlert(address, ALERT_STOP);
                         break;
                 }
+            } else if (bluetoothGatt.size() == 0) {
+                stopSelf();
             }
         } else if (bluetoothGatt.size() == 0) {
             stopSelf();
@@ -293,9 +248,7 @@ public final class BleService extends Service {
     }
 
     @Override
-    public IBinder onBind(
-            Intent intent
-    ) {
+    public IBinder onBind(Intent intent) {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
@@ -323,7 +276,14 @@ public final class BleService extends Service {
         if (bluetoothAdapter == null) {
             return false;
         }
-        bluetoothAdapter.getRemoteDevice(address).connectGatt(this, false, callback);
+        if (bluetoothGatt.get(address) != null) {
+            sendBroadcast(
+                    new Intent(DEVICE_CONNECTED)
+                            .putExtra(DEVICE_ADDRESS, address)
+            );
+        } else {
+            bluetoothAdapter.getRemoteDevice(address).connectGatt(this, false, callback);
+        }
         return true;
     }
 
@@ -331,8 +291,8 @@ public final class BleService extends Service {
         if (bluetoothAdapter == null) {
             return;
         }
-        for (BluetoothGatt gatt : bluetoothGatt.values()) {
-            gatt.disconnect();
+        for (BlePair pair : bluetoothGatt.values()) {
+            pair.gatt.disconnect();
         }
         bluetoothGatt.clear();
     }
@@ -344,7 +304,7 @@ public final class BleService extends Service {
             return;
         }
         if (bluetoothGatt.get(address) != null) {
-            bluetoothGatt.get(address).disconnect();
+            bluetoothGatt.get(address).gatt.disconnect();
             bluetoothGatt.remove(address);
         }
     }
@@ -378,33 +338,24 @@ public final class BleService extends Service {
     }
 
     private void immediateAlert(
-            @NonNull String address,
+            String address,
             int alertValue
     ) {
-        if (immediateAlertService == null
-                || immediateAlertService.getCharacteristics() == null
-                || immediateAlertService.getCharacteristics().size() == 0) {
-            error(getString(R.string.alert_error));
-            return;
-        }
-        final BluetoothGattCharacteristic characteristic = immediateAlertService.getCharacteristics().get(0);
-        characteristic.setValue(alertValue, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-        BluetoothGatt gatt = bluetoothGatt.get(address);
-        if (gatt != null) {
-            gatt.writeCharacteristic(characteristic);
+        if(address != null) {
+            BlePair pair = bluetoothGatt.get(address);
+            if (pair != null && pair.gatt != null && pair.alertCharacteristic != null) {
+                pair.alertCharacteristic.setValue(alertValue, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                pair.gatt.writeCharacteristic(pair.alertCharacteristic);
+            }
         }
     }
 
-    private void error(
-            @NonNull String text
-    ) {
+    private void error(String text) {
         ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
                 .notify(NOTIFICATION_ERROR_ID, getNotification(text));
     }
 
-    private Notification getNotification(
-            @NonNull String text
-    ) {
+    private Notification getNotification(String text) {
         Intent resultIntent = new Intent(this, MainActivity.class);
         PendingIntent resultPendingIntent = PendingIntent.getActivity(
                 this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT

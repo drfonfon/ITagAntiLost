@@ -11,11 +11,12 @@ import android.location.Location;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 
+import com.fonfon.geohash.GeoHash;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.lib.BitmapUtils;
 import com.fonfon.noloss.lib.BleService;
-import com.fonfon.noloss.lib.ClickBroadcastReceiver;
 import com.fonfon.noloss.lib.Device;
+import com.fonfon.noloss.lib.LocationChangeService;
 import com.fonfon.noloss.ui.BleViewModel;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -30,19 +31,19 @@ import java.util.ArrayList;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-class MapActivityViewModel extends BleViewModel implements OnMapReadyCallback {
+final class MapActivityViewModel extends BleViewModel implements OnMapReadyCallback {
 
     private boolean isFirstLocationChange = false;
-    private int markerSize;
-    private ArrayList<Marker> markers = new ArrayList<>();
+    private final int markerSize;
+    private final ArrayList<Marker> markers = new ArrayList<>();
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             String address = intent.getStringExtra(BleService.DEVICE_ADDRESS);
-            Location location = intent.getParcelableExtra(ClickBroadcastReceiver.LOCATION);
-            if(action != null && action.equals(ClickBroadcastReceiver.LOCATION_CHANGED) && address != null && location != null) {
+            Location location = intent.getParcelableExtra(LocationChangeService.LOCATION);
+            if(action != null && action.equals(LocationChangeService.LOCATION_CHANGED) && address != null && location != null) {
                 for (Marker marker: markers) {
                     if(marker.getSnippet().equals(address)) {
                         marker.setPosition(new LatLng(location.getLatitude(), location.getLongitude()));
@@ -62,9 +63,7 @@ class MapActivityViewModel extends BleViewModel implements OnMapReadyCallback {
     @Override
     public void resume() {
         super.resume();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(ClickBroadcastReceiver.LOCATION_CHANGED);
-        activity.registerReceiver(receiver, intentFilter);
+        activity.registerReceiver(receiver, new IntentFilter(LocationChangeService.LOCATION_CHANGED));
     }
 
     void pause() {
@@ -102,23 +101,27 @@ class MapActivityViewModel extends BleViewModel implements OnMapReadyCallback {
     private void showMarkers(final GoogleMap googleMap) {
         RealmResults<Device> devices = Realm.getDefaultInstance().where(Device.class).findAll();
         for (Device device : devices) {
-            Marker marker = googleMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(device.getLatitude(), device.getLongitude()))
-                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))
-                    .flat(true)
-                    .visible(device.getLatitude() != 0 && device.getLongitude() != 0)
-                    .title(device.getName())
-                    .snippet(device.getAddress())
-            );
-            markers.add(marker);
-            String image = device.getImage();
-            if (image != null) {
-                Bitmap bitmap = BitmapUtils.stringToBitMap(device.getImage());
-                if (bitmap != null) {
-                    Bitmap bmp = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
-                    marker.setIcon(BitmapDescriptorFactory.fromBitmap(bmp));
-                }
-            }
+            GeoHash geoHash = GeoHash.fromString(device.getGeoHash());
+            Location center = geoHash.getCenter();
+            createMarker(googleMap, new LatLng(center.getLatitude(), center.getLongitude()), device);
+        }
+    }
+
+    private void createMarker(GoogleMap googleMap, LatLng point, Device device) {
+        Marker marker = googleMap.addMarker(new MarkerOptions()
+                .position(point)
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))
+                .flat(true)
+                .title(device.getName())
+                .visible(Device.ZERO_GEOHASH.equals(device.getGeoHash()))
+                .snippet(device.getAddress())
+        );
+        markers.add(marker);
+        Bitmap bitmap = BitmapUtils.stringToBitMap(device.getImage());
+        if (bitmap != null) {
+            Bitmap bmp = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
+            bitmap.recycle();
+            marker.setIcon(BitmapDescriptorFactory.fromBitmap(bmp));
         }
     }
 }

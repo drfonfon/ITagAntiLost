@@ -49,15 +49,6 @@
             android:enabled="true"
             android:exported="true" />
 
-        <receiver
-            android:name=".lib.ClickBroadcastReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="DEVICE_BUTTON_CLICKED" />
-            </intent-filter>
-        </receiver>
-
         <activity
             android:name=".ui.detail.DetailActivity"
             android:label="@string/title_activity_detail"
@@ -67,13 +58,19 @@
         <service android:name=".lib.SaveImageService" />
 
         <receiver
-            android:name=".lib.DeviceDisconnectBroadcastReceiver"
+            android:name=".lib.DeviceStatusBroadcastReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
+                <action android:name="DEVICE_CONNECTED" />
                 <action android:name="DEVICE_DISCONNECTED" />
+                <action android:name="DEVICE_BUTTON_CLICKED" />
             </intent-filter>
         </receiver>
+
+        <service
+            android:name=".lib.LocationChangeService"
+            android:exported="false"/>
     </application>
 
 </manifest>

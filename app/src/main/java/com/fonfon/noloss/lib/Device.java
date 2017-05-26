@@ -1,11 +1,7 @@
 package com.fonfon.noloss.lib;
 
-import android.bluetooth.le.ScanResult;
-import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
-
-import com.google.android.gms.maps.model.LatLng;
 
 import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
@@ -15,42 +11,32 @@ public class Device extends RealmObject implements Parcelable {
 
     @Ignore
     public static final String ADDRESS = "address";
+    @Ignore
+    public static final String ZERO_GEOHASH = "s00000000000";
 
     @PrimaryKey
     private String address;
     private String name;
-    private double latitude;
-    private double longitude;
+    private String geoHash;
     private String image;
+
     @Ignore
-    private byte batteryLevel;
-    @Ignore
-    private boolean isConnected = false;
-    @Ignore
-    private boolean isAlarmed = false;
+    private boolean isConnected;
 
     public Device() {
     }
 
-    public Device(ScanResult scanResult) {
-        address = scanResult.getDevice().getAddress();
-        name = scanResult.getScanRecord().getDeviceName();
-        latitude = 0;
-        longitude = 0;
-        batteryLevel = 0;
-        isConnected = false;
-        isAlarmed = false;
-        image = null;
+    public Device(String address, String name, String defaultImage) {
+        this.address = address;
+        this.name = name;
+        geoHash = ZERO_GEOHASH;
+        this.image = defaultImage;
     }
 
     protected Device(Parcel in) {
         address = in.readString();
         name = in.readString();
-        batteryLevel = in.readByte();
-        isConnected = in.readByte() == 0;
-        isAlarmed = in.readByte() == 0;
-        latitude = in.readDouble();
-        longitude = in.readDouble();
+        geoHash = in.readString();
         image = in.readString();
     }
 
@@ -70,44 +56,12 @@ public class Device extends RealmObject implements Parcelable {
         this.name = name;
     }
 
-    public byte getBatteryLevel() {
-        return batteryLevel;
+    public String getGeoHash() {
+        return geoHash;
     }
 
-    public void setBatteryLevel(byte batteryLevel) {
-        this.batteryLevel = batteryLevel;
-    }
-
-    public void setConnected(boolean connected) {
-        isConnected = connected;
-    }
-
-    public boolean isConnected() {
-        return isConnected;
-    }
-
-    public void setAlarmed(boolean alarmed) {
-        isAlarmed = alarmed;
-    }
-
-    public boolean isAlarmed() {
-        return isAlarmed;
-    }
-
-    public double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
-    }
-
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
+    public void setGeoHash(String geoHash) {
+        this.geoHash = geoHash;
     }
 
     public String getImage() {
@@ -118,15 +72,12 @@ public class Device extends RealmObject implements Parcelable {
         this.image = image;
     }
 
-    public void setLocation(Location location) {
-        if (location != null) {
-            this.latitude = location.getLatitude();
-            this.longitude = location.getLongitude();
-        }
+    public void setConnected(boolean connected) {
+        isConnected = connected;
     }
 
-    public LatLng getPosition() {
-        return new LatLng(latitude, longitude);
+    public boolean isConnected() {
+        return isConnected;
     }
 
     int doHash() {
@@ -168,11 +119,7 @@ public class Device extends RealmObject implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(address);
         dest.writeString(name);
-        dest.writeByte(batteryLevel);
-        dest.writeByte((byte) (isConnected ? 0 : 1));
-        dest.writeByte((byte) (isAlarmed ? 0 : 1));
-        dest.writeDouble(latitude);
-        dest.writeDouble(longitude);
+        dest.writeString(geoHash);
         dest.writeString(image);
     }
 }

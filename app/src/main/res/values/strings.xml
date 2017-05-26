@@ -29,5 +29,6 @@
     <string name="save_image_error">Could not save image</string>
     <string name="map_title">Devices map</string>
     <string name="delete">Delete</string>
+    <string name="delete_error">Unable to remove a device</string>
 
 </resources>
