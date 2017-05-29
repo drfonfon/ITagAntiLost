@@ -113,7 +113,7 @@ final class MapActivityViewModel extends BleViewModel implements OnMapReadyCallb
                 .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))
                 .flat(true)
                 .title(device.getName())
-                .visible(Device.ZERO_GEOHASH.equals(device.getGeoHash()))
+                .visible(!Device.ZERO_GEOHASH.equals(device.getGeoHash()))
                 .snippet(device.getAddress())
         );
         markers.add(marker);
