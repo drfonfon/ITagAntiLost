@@ -1,6 +1,5 @@
 package com.fonfon.noloss.ui.main;
 
-import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -26,7 +25,6 @@ public final class MainActivity extends AppCompatActivity implements MainActivit
         binding.recycler.setAdapter(model.getAdapter());
         new SwipeHelper(model, binding.recycler);
         binding.refresh.setOnRefreshListener(model);
-        model.init();
     }
 
     @Override
@@ -42,21 +40,14 @@ public final class MainActivity extends AppCompatActivity implements MainActivit
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        model.onActivityResult(requestCode, resultCode, data);
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
         binding.unbind();
-        model.onDestroy();
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        model.init();
     }
 
     @Override

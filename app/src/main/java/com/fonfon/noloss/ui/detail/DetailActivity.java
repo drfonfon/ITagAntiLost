@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
@@ -79,13 +78,6 @@ public final class DetailActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         binding.unbind();
-        model.onDestroy();
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        model.init();
     }
 
 }

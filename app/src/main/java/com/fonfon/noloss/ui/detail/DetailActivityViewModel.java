@@ -16,12 +16,11 @@ import android.widget.Toast;
 
 import com.fonfon.geohash.GeoHash;
 import com.fonfon.noloss.App;
-import com.fonfon.noloss.R;
 import com.fonfon.noloss.BleService;
+import com.fonfon.noloss.R;
 import com.fonfon.noloss.lib.Device;
 import com.fonfon.noloss.lib.LocationChangeService;
 import com.fonfon.noloss.lib.SaveImageService;
-import com.fonfon.noloss.ui.BleViewModel;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -34,7 +33,7 @@ import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmModel;
 
-public final class DetailActivityViewModel extends BleViewModel implements OnMapReadyCallback, Toolbar.OnMenuItemClickListener {
+public final class DetailActivityViewModel implements OnMapReadyCallback, Toolbar.OnMenuItemClickListener {
 
     private static final int GALLERY_REQUEST = 2;
 
@@ -47,6 +46,7 @@ public final class DetailActivityViewModel extends BleViewModel implements OnMap
     private Marker marker;
     private GoogleMap googleMap;
     private boolean isDeleted = false;
+    private final AppCompatActivity activity;
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -78,7 +78,6 @@ public final class DetailActivityViewModel extends BleViewModel implements OnMap
     };
 
     DetailActivityViewModel(AppCompatActivity activity, String address) {
-        super(activity);
         this.activity = activity;
         this.device = Realm.getDefaultInstance().where(Device.class).equalTo(Device.ADDRESS, address).findFirst();
 
@@ -95,8 +94,7 @@ public final class DetailActivityViewModel extends BleViewModel implements OnMap
         });
     }
 
-    @Override
-    public void resume() {
+    void resume() {
         App.getInstance().setVisibleAddress(device.getAddress());
         IntentFilter intentFilter = new IntentFilter(BleService.DEVICE_CONNECTED);
         intentFilter.addAction(BleService.DEVICE_DISCONNECTED);
@@ -109,6 +107,7 @@ public final class DetailActivityViewModel extends BleViewModel implements OnMap
         App.getInstance().setVisibleAddress(null);
         activity.startService(new Intent(activity, BleService.class));
         activity.unregisterReceiver(receiver);
+        device.removeAllChangeListeners();
         if (!isDeleted && !device.getName().equals(name.get())) {
             Realm.getDefaultInstance().beginTransaction();
             device.setName(name.get());
@@ -116,9 +115,7 @@ public final class DetailActivityViewModel extends BleViewModel implements OnMap
         }
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK)
             switch (requestCode) {
                 case GALLERY_REQUEST:

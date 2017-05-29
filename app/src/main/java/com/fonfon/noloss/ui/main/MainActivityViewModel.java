@@ -4,15 +4,15 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.databinding.ObservableBoolean;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
 import com.fonfon.noloss.App;
-import com.fonfon.noloss.R;
 import com.fonfon.noloss.BleService;
+import com.fonfon.noloss.R;
 import com.fonfon.noloss.lib.Device;
-import com.fonfon.noloss.ui.BleViewModel;
 import com.fonfon.noloss.ui.detail.DetailActivity;
 import com.fonfon.noloss.ui.map.MapActivity;
 import com.fonfon.noloss.ui.newdevice.NewDeviceActivity;
@@ -22,18 +22,21 @@ import io.realm.OrderedRealmCollectionChangeListener;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public final class MainActivityViewModel extends BleViewModel implements
+public final class MainActivityViewModel implements
         DevicesAdapter.Listener, SwipeHelper.SwipeListener, SwipeRefreshLayout.OnRefreshListener {
+
+    public final ObservableBoolean isEmpty = new ObservableBoolean(true);
 
     private final DataListener dataListener;
     private final DevicesAdapter adapter;
+    private final AppCompatActivity activity;
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(intent != null) {
+            if (intent != null) {
                 String action = intent.getAction();
                 String address = intent.getStringExtra(BleService.DEVICE_ADDRESS);
-                if(action != null && address != null) {
+                if (action != null && address != null) {
                     switch (action) {
                         case BleService.DEVICE_CONNECTED:
                             adapter.deviceConnected(address);
@@ -48,9 +51,8 @@ public final class MainActivityViewModel extends BleViewModel implements
     };
 
     MainActivityViewModel(AppCompatActivity activity, DataListener dataListener) {
-        super(activity);
-        this.dataListener = dataListener;
         this.activity = activity;
+        this.dataListener = dataListener;
         adapter = new DevicesAdapter(this);
     }
 
@@ -58,9 +60,7 @@ public final class MainActivityViewModel extends BleViewModel implements
         return adapter;
     }
 
-    @Override
-    public void resume() {
-        super.resume();
+    void resume() {
         IntentFilter intentFilter = new IntentFilter(BleService.DEVICE_CONNECTED);
         intentFilter.addAction(BleService.DEVICE_DISCONNECTED);
         activity.registerReceiver(receiver, intentFilter);
@@ -95,7 +95,7 @@ public final class MainActivityViewModel extends BleViewModel implements
     @Override
     public void onItemDelete(final int adapterPosition) {
         final String address = adapter.getDeviceAddressFrom(adapterPosition);
-        if(address != null) {
+        if (address != null) {
             Realm.getDefaultInstance().executeTransactionAsync(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
@@ -108,9 +108,7 @@ public final class MainActivityViewModel extends BleViewModel implements
                 @Override
                 public void onSuccess() {
                     BleService.disconnect(activity, address);
-                    if(!adapter.deviceDeleted(adapterPosition)) {
-                        onDeleteError(adapterPosition);
-                    }
+                    adapter.deviceDeleted(adapterPosition);
                 }
             }, new Realm.Transaction.OnError() {
                 @Override
@@ -137,6 +135,7 @@ public final class MainActivityViewModel extends BleViewModel implements
                 .addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<Device>>() {
                     @Override
                     public void onChange(RealmResults<Device> devices, OrderedCollectionChangeSet changeSet) {
+                        isEmpty.set(devices.size() == 0);
                         adapter.addDevices(devices);
                         for (Device device : devices) {
                             BleService.connect(activity, device.getAddress());

@@ -12,12 +12,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 
 import com.fonfon.geohash.GeoHash;
+import com.fonfon.noloss.BleService;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.lib.BitmapUtils;
-import com.fonfon.noloss.BleService;
 import com.fonfon.noloss.lib.Device;
 import com.fonfon.noloss.lib.LocationChangeService;
-import com.fonfon.noloss.ui.BleViewModel;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -31,8 +30,9 @@ import java.util.ArrayList;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-final class MapActivityViewModel extends BleViewModel implements OnMapReadyCallback {
+final class MapActivityViewModel implements OnMapReadyCallback {
 
+    private final AppCompatActivity activity;
     private boolean isFirstLocationChange = false;
     private final int markerSize;
     private final ArrayList<Marker> markers = new ArrayList<>();
@@ -56,13 +56,11 @@ final class MapActivityViewModel extends BleViewModel implements OnMapReadyCallb
     };
 
     MapActivityViewModel(AppCompatActivity activity) {
-        super(activity);
+        this.activity = activity;
         markerSize = activity.getResources().getDimensionPixelSize(R.dimen.marker_size);
     }
 
-    @Override
-    public void resume() {
-        super.resume();
+    void resume() {
         activity.registerReceiver(receiver, new IntentFilter(LocationChangeService.LOCATION_CHANGED));
     }
 

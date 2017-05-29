@@ -65,7 +65,7 @@ public final class NewDeviceActivity extends AppCompatActivity implements NewDev
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        model.onActivityResult(requestCode, resultCode, data);
+        model.onActivityResult(requestCode);
     }
 
     @Override

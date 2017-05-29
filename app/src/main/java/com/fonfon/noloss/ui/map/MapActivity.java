@@ -37,7 +37,6 @@ public final class MapActivity extends AppCompatActivity {
                 finish();
             }
         });
-        model.init();
     }
 
     @Override
@@ -62,6 +61,5 @@ public final class MapActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         binding.unbind();
-        model.onDestroy();
     }
 }

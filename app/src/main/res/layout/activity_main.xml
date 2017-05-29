@@ -5,6 +5,7 @@
 
     <data>
 
+        <import type="android.view.View"/>
         <variable
             name="model"
             type="com.fonfon.noloss.ui.main.MainActivityViewModel" />
@@ -52,6 +53,16 @@
             android:onClick="@{() -> model.mapCLick()}"
             android:src="@drawable/ic_map"
             app:fabSize="normal" />
+
+        <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/text_empty"
+            android:visibility="@{model.isEmpty ? View.VISIBLE : View.GONE}"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textSize="@dimen/text_size_large"
+            android:fontFamily="monospace"
+            android:text="@string/there_are_no_connected_devices"/>
 
     </android.support.design.widget.CoordinatorLayout>
 

@@ -1,11 +1,20 @@
 package com.fonfon.noloss.ui.newdevice;
 
+import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.ParcelUuid;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
@@ -13,7 +22,6 @@ import com.fonfon.noloss.R;
 import com.fonfon.noloss.lib.BitmapUtils;
 import com.fonfon.noloss.BleService;
 import com.fonfon.noloss.lib.Device;
-import com.fonfon.noloss.ui.BleViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +30,17 @@ import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
-final class NewDeviceViewModel extends BleViewModel implements NewDevicesAdapter.Listener, SwipeRefreshLayout.OnRefreshListener {
+final class NewDeviceViewModel implements NewDevicesAdapter.Listener, SwipeRefreshLayout.OnRefreshListener {
+
+    private final static int REQUEST_ENABLE_BT = 451;
+    private static int REQUEST_LOCATION = 1;
+    private static String[] PERMISSIONS_LOCATION = new String[]{
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+    };
+
+    private AppCompatActivity activity;
+    private BluetoothAdapter bluetoothAdapter;
 
     private static final long SCAN_PERIOD = 8000;
 
@@ -55,7 +73,6 @@ final class NewDeviceViewModel extends BleViewModel implements NewDevicesAdapter
     private String defaultImage;
 
     NewDeviceViewModel(AppCompatActivity activity, DataListener dataListener) {
-        super(activity);
         this.activity = activity;
         this.dataListener = dataListener;
 
@@ -87,15 +104,72 @@ final class NewDeviceViewModel extends BleViewModel implements NewDevicesAdapter
         return adapter;
     }
 
-    @Override
-    public void resume() {
-        super.resume();
+    void init() {
+        if (checkPermission()) {
+            if (!activity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+                Toast.makeText(activity, R.string.ble_not_supported, Toast.LENGTH_SHORT).show();
+                activity.finish();
+            }
+
+            BluetoothManager bluetoothManager = (BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
+            bluetoothAdapter = bluetoothManager.getAdapter();
+        } else {
+            requestLocationPermission();
+        }
+    }
+
+
+    private boolean checkPermission() {
+        return ActivityCompat.checkSelfPermission(activity, PERMISSIONS_LOCATION[0]) == PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(activity, PERMISSIONS_LOCATION[1]) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestLocationPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(activity, PERMISSIONS_LOCATION[0])
+                && ActivityCompat.shouldShowRequestPermissionRationale(activity, PERMISSIONS_LOCATION[1])) {
+            new AlertDialog.Builder(activity)
+                    .setTitle(R.string.app_name)
+                    .setMessage(R.string.ble_permission)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions(activity, PERMISSIONS_LOCATION, REQUEST_LOCATION);
+                            dialog.dismiss();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    }).show();
+        } else {
+            ActivityCompat.requestPermissions(activity, PERMISSIONS_LOCATION, REQUEST_LOCATION);
+        }
+    }
+
+    void resume() {
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+            activity.startActivityForResult(
+                    new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE),
+                    REQUEST_ENABLE_BT
+            );
+        }
         onRefresh();
     }
 
     void pause() {
         handler.removeCallbacks(stopScan);
         bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
+    }
+
+    void onActivityResult(int requestCode) {
+        if (requestCode == REQUEST_ENABLE_BT) resume();
+    }
+
+    void onDestroy() {
+        activity = null;
+        bluetoothAdapter = null;
     }
 
     @Override

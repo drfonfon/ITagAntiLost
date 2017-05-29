@@ -207,6 +207,7 @@ public final class BleService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
         if (initialize()) {
             startForeground(NOTIFICATION_ID, getNotification(getString(R.string.working)));
         } else {
@@ -254,7 +255,7 @@ public final class BleService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        disconnect();
+        disconnect(false);
     }
 
     private boolean initialize() {
@@ -286,14 +287,21 @@ public final class BleService extends Service {
         return true;
     }
 
-    private void disconnect() {
+    private void disconnect(boolean isNotify) {
         if (bluetoothAdapter == null) {
             return;
         }
         for (BlePair pair : bluetoothGatt.values()) {
             pair.gatt.disconnect();
+            if(isNotify) {
+                sendBroadcast(
+                        new Intent(DEVICE_DISCONNECTED)
+                                .putExtra(DEVICE_ADDRESS, pair.gatt.getDevice().getAddress())
+                );
+            }
         }
         bluetoothGatt.clear();
+        stopSelf();
     }
 
     private void disconnect(
@@ -305,6 +313,9 @@ public final class BleService extends Service {
         if (bluetoothGatt.get(address) != null) {
             bluetoothGatt.get(address).gatt.disconnect();
             bluetoothGatt.remove(address);
+        }
+        if (bluetoothGatt.size() == 0) {
+            stopSelf();
         }
     }
 

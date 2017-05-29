@@ -75,13 +75,11 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
         return null;
     }
 
-    boolean deviceDeleted(int index) {
+    void deviceDeleted(int index) {
         if (index > -1 && index < devices.size()) {
             devices.remove(index);
             notifyItemRemoved(index);
-            return true;
         }
-        return false;
     }
 
     class Holder extends RecyclerView.ViewHolder implements View.OnClickListener {
