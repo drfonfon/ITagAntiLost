@@ -8,7 +8,7 @@ android {
         applicationId "com.fonfon.noloss"
         minSdkVersion 21
         targetSdkVersion 25
-        versionCode 1
+        versionCode 4
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -35,4 +35,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.github.drfonfon:android-geohash:0.3'
     testCompile 'junit:junit:4.12'
+    releaseCompile 'com.google.firebase:firebase-crash:10.2.6'
+    apply plugin: 'com.google.gms.google-services'
 }

@@ -3,6 +3,7 @@ package com.fonfon.noloss.ui.newdevice;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
@@ -154,13 +155,19 @@ final class NewDeviceViewModel implements NewDevicesAdapter.Listener, SwipeRefre
                     new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE),
                     REQUEST_ENABLE_BT
             );
+        } else {
+            onRefresh();
         }
-        onRefresh();
     }
 
     void pause() {
         handler.removeCallbacks(stopScan);
-        bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
+        if (bluetoothAdapter != null) {
+            BluetoothLeScanner scanner = bluetoothAdapter.getBluetoothLeScanner();
+            if (scanner != null && scanCallback != null) {
+                scanner.stopScan(scanCallback);
+            }
+        }
     }
 
     void onActivityResult(int requestCode) {
