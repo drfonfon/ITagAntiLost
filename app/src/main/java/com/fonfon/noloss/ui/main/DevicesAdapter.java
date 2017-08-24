@@ -1,114 +1,124 @@
 package com.fonfon.noloss.ui.main;
 
-import android.databinding.ObservableBoolean;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 
-import com.fonfon.noloss.databinding.ItemDeviceBinding;
+import com.fonfon.noloss.R;
 import com.fonfon.noloss.lib.Device;
+import com.jakewharton.rxbinding2.support.v7.widget.RxToolbar;
+import com.jakewharton.rxbinding2.view.RxView;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
 
-    private final Listener listener;
-    private final List<Device> devices = new ArrayList<>();
+  private final List<Device> devices = new ArrayList<>();
+  private final DeviceAdapterListener listener;
 
-    DevicesAdapter(Listener listener) {
-        this.listener = listener;
-    }
+  DevicesAdapter(DeviceAdapterListener listener) {
+    this.listener = listener;
+  }
 
-    @Override
-    public Holder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new Holder(
-                ItemDeviceBinding.inflate(
-                        LayoutInflater.from(parent.getContext()), parent, false
-                )
-        );
-    }
+  @Override
+  public DevicesAdapter.Holder onCreateViewHolder(ViewGroup parent, int viewType) {
+    return new Holder(
+        LayoutInflater.from(parent.getContext()).inflate(R.layout.item_device, parent, false)
+    );
+  }
 
-    @Override
-    public void onBindViewHolder(final Holder holder, int position) {
-        holder.binding.setDevice(devices.get(position));
-        holder.binding.connect.setConnect(new ObservableBoolean(devices.get(position).isConnected()));
-    }
+  @Override
+  public void onBindViewHolder(final DevicesAdapter.Holder holder, int position) {
+    final Device device = devices.get(position);
+    holder.toolbar.setTitle(device.getName());
+    holder.toolbar.setTitleTextColor(device.isConnected() ? Color.BLACK : Color.WHITE);
 
-    @Override
-    public int getItemCount() {
-        return devices.size();
-    }
+    holder.toolbar.setSubtitle(device.getAddress());
+    holder.toolbar.setSubtitleTextColor(device.isConnected() ? Color.BLACK : Color.WHITE);
 
-    void addDevices(@NonNull Collection<Device> devices) {
-        this.devices.clear();
-        this.devices.addAll(devices);
-        notifyDataSetChanged();
-    }
+    int red = ContextCompat.getColor(holder.toolbar.getContext(), R.color.mojo);
+    int green = ContextCompat.getColor(holder.toolbar.getContext(), R.color.fern);
+    holder.toolbar.setBackgroundColor(device.isConnected() ? green : red);
 
-    void deviceConnected(String address) {
-        for (int i = 0; i < devices.size(); i++) {
-            if (devices.get(i).getAddress().equals(address)) {
-                devices.get(i).setConnected(true);
-                notifyItemChanged(i);
-                break;
-            }
+    Drawable moreIcon = ContextCompat.getDrawable(holder.toolbar.getContext(), R.drawable.ic_more);
+    DrawableCompat.setTint(moreIcon, device.isConnected() ? Color.BLACK : Color.WHITE);
+    holder.toolbar.setOverflowIcon(moreIcon);
+
+    holder.viewStatus.setEnabled(device.isConnected());
+    holder.fabAlert.setImageResource(device.isAlerted() ? R.drawable.ic_volume_off : R.drawable.ic_volume_up);
+
+    String connected = holder.textStatus.getContext().getString(R.string.status_connected);
+    String disconnected = holder.textStatus.getContext().getString(R.string.status_disconnected);
+
+    holder.textStatus.setText(device.isConnected() ? connected : disconnected);
+  }
+
+  @Override
+  public int getItemCount() {
+    return devices.size();
+  }
+
+  void setDevices(@NonNull List<Device> devices) {
+    this.devices.clear();
+    this.devices.addAll(devices);
+    notifyDataSetChanged();
+  }
+
+  class Holder extends RecyclerView.ViewHolder {
+
+    @BindView(R.id.imageDevice)
+    ImageView image;
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
+    @BindView(R.id.viewStatus)
+    TextView viewStatus;
+    @BindView(R.id.textStatus)
+    TextView textStatus;
+    @BindView(R.id.fabAlert)
+    FloatingActionButton fabAlert;
+
+    Holder(View view) {
+      super(view);
+      ButterKnife.bind(this, view);
+
+      toolbar.inflateMenu(R.menu.device_detail);
+      RxView.clicks(fabAlert).subscribe(o -> listener.onAlert(devices.get(getAdapterPosition())));
+      RxToolbar.itemClicks(toolbar).subscribe(menuItem -> {
+        switch (menuItem.getItemId()) {
+          case R.id.menu_delete:
+            listener.onDelete(devices.get(getAdapterPosition()));
+            break;
+          case R.id.menu_rename:
+            listener.onRename(devices.get(getAdapterPosition()));
+            break;
+          case R.id.menu_image:
+            listener.onEditImage(devices.get(getAdapterPosition()));
         }
+      });
     }
+  }
 
-    void deviceDisconnected(String address) {
-        for (int i = 0; i < devices.size(); i++) {
-            if (devices.get(i).getAddress().equals(address)) {
-                devices.get(i).setConnected(false);
-                notifyItemChanged(i);
-                break;
-            }
-        }
-    }
+  interface DeviceAdapterListener {
+    void onRename(Device device);
 
-    String getDeviceAddressFrom(int index) {
-        if (index > -1 && index < devices.size())
-            return devices.get(index).getAddress();
-        return null;
-    }
+    void onEditImage(Device device);
 
-    void deviceDeleted(int index) {
-        if (index > -1 && index < devices.size()) {
-            devices.remove(index);
-            notifyItemRemoved(index);
-        }
-    }
+    void onDelete(Device device);
 
-    class Holder extends RecyclerView.ViewHolder implements View.OnClickListener {
-
-        private final ItemDeviceBinding binding;
-
-        Holder(final ItemDeviceBinding binding) {
-            super(binding.getRoot());
-            this.binding = binding;
-            this.binding.getRoot().setOnClickListener(this);
-            this.binding.setAlarm(false);
-            this.binding.fab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    binding.setAlarm(!binding.getAlarm());
-                    listener.onDeviceAlerted(binding.getDevice().getAddress(), binding.getAlarm());
-                }
-            });
-        }
-
-        @Override
-        public void onClick(View v) {
-            listener.onDeviceClick(devices.get(getAdapterPosition()).getAddress());
-        }
-    }
-
-    interface Listener {
-        void onDeviceClick(String address);
-
-        void onDeviceAlerted(String address, boolean isAlerted);
-    }
+    void onAlert(Device device);
+  }
 }

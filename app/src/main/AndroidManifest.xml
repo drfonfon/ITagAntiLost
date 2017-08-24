@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.fonfon.noloss">
+          package="com.fonfon.noloss">
 
     <uses-feature
         android:name="android.hardware.bluetooth_le"
-        android:required="true" />
+        android:required="true"/>
     <uses-feature
         android:name="android.hardware.location"
-        android:required="false" />
+        android:required="false"/>
 
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
         android:name=".App"
-        android:allowBackup="false"
+        android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
@@ -26,54 +26,42 @@
         android:theme="@style/AppTheme">
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="@string/google_maps_key" />
-
-        <activity
-            android:name=".ui.main.MainActivity"
-            android:screenOrientation="portrait">
+            android:value="@string/google_maps_key"/>
+        <activity android:name=".ui.main.DevicesActivity"
+                  android:screenOrientation="portrait">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.MAIN"/>
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
         <activity
             android:name=".ui.newdevice.NewDeviceActivity"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".ui.detail.DetailActivity"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".ui.map.MapActivity"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"/>
 
         <service
             android:name=".BleService"
             android:enabled="true"
-            android:exported="false" />
-
+            android:exported="false"/>
         <service
             android:name=".lib.SaveImageService"
             android:enabled="true"
-            android:exported="false" />
-
+            android:exported="false"/>
         <service
             android:name=".lib.LocationChangeService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"/>
 
         <receiver
             android:name=".lib.DeviceStatusBroadcastReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.fonfon.noloss.DEVICE_CONNECTED" />
-                <action android:name="com.fonfon.noloss.DEVICE_DISCONNECTED" />
-                <action android:name="com.fonfon.noloss.DEVICE_BUTTON_CLICKED" />
+                <action android:name="com.fonfon.noloss.DEVICE_CONNECTED"/>
+                <action android:name="com.fonfon.noloss.DEVICE_DISCONNECTED"/>
+                <action android:name="com.fonfon.noloss.DEVICE_BUTTON_CLICKED"/>
             </intent-filter>
         </receiver>
-
-
     </application>
 
 </manifest>

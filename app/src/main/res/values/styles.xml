@@ -14,7 +14,7 @@
     <style name="AppTheme.Toolbar" parent="Widget.AppCompat.Toolbar">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">?attr/actionBarSize</item>
-        <item name="android:background">?attr/colorPrimary</item>
+        <item name="android:background">?attr/colorPrimaryDark</item>
         <item name="popupTheme">@style/AppTheme.PopupOverlay</item>
     </style>
 
@@ -28,6 +28,11 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_margin">@dimen/spacing_normal</item>
+    </style>
+
+    <style name="BlueButton" parent="Widget.AppCompat.Button.Colored">
+        <item name="colorButtonNormal">@color/mariner</item>
+        <item name="android:textColor">@android:color/white</item>
     </style>
 
 </resources>

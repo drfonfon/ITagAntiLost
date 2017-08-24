@@ -1,45 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/spacing_small"
+    android:paddingEnd="@dimen/spacing_normal"
+    android:paddingStart="@dimen/spacing_normal"
+    android:paddingTop="@dimen/spacing_small">
 
-    <data>
-
-        <variable
-            name="name"
-            type="String" />
-
-        <variable
-            name="address"
-            type="String" />
-    </data>
-
-    <LinearLayout
+    <android.support.v7.widget.AppCompatTextView
+        android:id="@+id/text_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingBottom="@dimen/spacing_small"
-        android:paddingEnd="@dimen/spacing_normal"
-        android:paddingStart="@dimen/spacing_normal"
-        android:paddingTop="@dimen/spacing_small">
+        android:fontFamily="monospace"
+        android:textColor="@color/oil"
+        android:textSize="@dimen/text_size_large"
+        android:textStyle="bold"
+        tools:text="name"/>
 
-        <android.support.v7.widget.AppCompatTextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@{name}"
-            android:textColor="@color/oil"
-            android:textSize="@dimen/text_size_large"
-            android:textStyle="bold"
-            android:fontFamily="monospace"
-            tools:text="name" />
+    <android.support.v7.widget.AppCompatTextView
+        android:id="@+id/text_address"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="monospace"
+        android:textColor="@color/oil"
+        android:textSize="@dimen/text_size_small"
+        tools:text="AA:BB:CC:DDD"/>
 
-        <android.support.v7.widget.AppCompatTextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@{address}"
-            android:textColor="@color/oil"
-            android:textSize="@dimen/text_size_small"
-            android:fontFamily="monospace"
-            tools:text="AA:BB:CC:DDD" />
-
-    </LinearLayout>
-</layout>
+</LinearLayout>
