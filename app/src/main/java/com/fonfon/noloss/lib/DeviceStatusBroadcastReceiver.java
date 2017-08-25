@@ -5,6 +5,11 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.fonfon.noloss.BleService;
+import com.fonfon.noloss.R;
+import com.fonfon.noloss.db.DbHelper;
+import com.fonfon.noloss.db.DeviceDB;
+
+import nl.nl2312.rxcupboard2.RxCupboard;
 
 public class DeviceStatusBroadcastReceiver extends BroadcastReceiver {
 
@@ -14,43 +19,23 @@ public class DeviceStatusBroadcastReceiver extends BroadcastReceiver {
       final String address = intent.getStringExtra(BleService.DEVICE_ADDRESS);
       final String action = intent.getAction();
       if (action != null && address != null) {
-//        Realm.getDefaultInstance().executeTransactionAsync(new Realm.Transaction() {
-//          @Override
-//          public void execute(Realm realm) {
-//            DeviceDB device = realm.where(DeviceDB.class).equalTo(DeviceDB.ADDRESS, address).findFirst();
-//            if (device != null) {
-//              switch (action) {
-//                case BleService.DEVICE_BUTTON_CLICKED:
-//                  context.startService(new Intent(context, LocationChangeService.class)
-//                      .putExtra(BleService.DEVICE_ADDRESS, address)
-//                  );
-//                  break;
-//                case BleService.DEVICE_DISCONNECTED:
-//                  if (App.getInstance().getVisibleAddress() == null) {
-//                    String statusText = context.getResources().getString(R.string.status_disconnected);
-//                    Bitmap bitmap = BitmapUtils.stringToBitMap(device.getImage());
-//
-//                    ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
-//                        .notify(device.doHash(),
-//                            new NotificationCompat.Builder(context)
-//                                .setLargeIcon(bitmap)
-//                                .setSmallIcon(R.drawable.ic_find_key)
-//                                .setContentTitle(context.getString(R.string.app_name))
-//                                .setVibrate(new long[]{1000, 1000})
-//                                .setSound(Settings.System.DEFAULT_NOTIFICATION_URI)
-//                                .setContentText(device.getName() + " " + statusText)
-//                                .build());
-//                  }
-//                  break;
-//              }
-//            }
-//          }
-//        });
+        switch (action) {
+          case BleService.DEVICE_BUTTON_CLICKED:
+            context.startService(new Intent(context, LocationChangeService.class)
+                .putExtra(BleService.DEVICE_ADDRESS, address)
+            );
+            break;
+          case BleService.DEVICE_DISCONNECTED:
+            RxCupboard
+                .withDefault(DbHelper.getConnection(context))
+                .query(DeviceDB.class, "address = ?", address)
+                .subscribe(device -> {
+                  String statusText = context.getResources().getString(R.string.status_disconnected);
+                  NotifyManager.showNotification(device, context, device.getName() + " " + statusText);
+                });
+            break;
+        }
       }
     }
-  }
-
-  void lol() {
-
   }
 }

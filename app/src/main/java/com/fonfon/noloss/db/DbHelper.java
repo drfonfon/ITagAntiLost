@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 
-public class DbHelper extends SQLiteOpenHelper {
+public final class DbHelper extends SQLiteOpenHelper {
 
   private static final String DATABASE_NAME = "NoLoss.db";
   private static final int DATABASE_VERSION = 1;
@@ -24,7 +24,7 @@ public class DbHelper extends SQLiteOpenHelper {
     return database;
   }
 
-  public DbHelper(Context context) {
+  private DbHelper(Context context) {
     super(context, DATABASE_NAME, null, DATABASE_VERSION);
   }
 

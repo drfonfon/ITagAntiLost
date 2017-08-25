@@ -1,12 +1,13 @@
 package com.fonfon.noloss.ui.main;
 
-import com.fonfon.noloss.ActivityEvent;
+import com.fonfon.noloss.lib.ActivityEvent;
 import com.fonfon.noloss.lib.Device;
+import com.fonfon.noloss.viewstate.DevicesViewState;
 import com.hannesdorfmann.mosby3.mvp.MvpView;
 
 import io.reactivex.Observable;
 
-interface DevicesView extends MvpView {
+public interface DevicesView extends MvpView {
 
   Observable<ActivityEvent> onLifecycleIntent();
 
@@ -16,9 +17,9 @@ interface DevicesView extends MvpView {
 
   Observable<Device> alertDeviceIntent();
 
-  Observable<Device> renameDeviceIntent();
+  Observable<Device> updateDeviceIntent();
 
-  Observable<Device> editImageDeviceIntent();
+  Observable<Object> refreshIntent();
 
   void render(DevicesViewState state);
 }

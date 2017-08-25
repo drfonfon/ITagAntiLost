@@ -1,4 +1,4 @@
-package com.fonfon.noloss;
+package com.fonfon.noloss.lib;
 
 public enum ActivityEvent {
   CREATE,

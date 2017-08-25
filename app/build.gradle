@@ -11,7 +11,6 @@ android {
         }
     }
     compileOptions {
-        // For retrolambda support
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -37,35 +36,31 @@ android {
 dependencies {
 
     def rxbindingVersion = '2.0.0'
+    def supportVersion = '25.3.1'
 
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     testCompile 'junit:junit:4.12'
 
-    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
-    compile 'io.reactivex.rxjava2:rxjava:2.1.2'
-
-    compile 'com.hannesdorfmann.mosby3:mvi:3.0.4'
-
-    compile 'com.android.support:design:25.3.1'
-    compile 'com.android.support:cardview-v7:25.3.1'
+    compile "com.android.support:design:$supportVersion"
+    compile "com.android.support:cardview-v7:$supportVersion"
     compile 'com.google.android.gms:play-services-maps:10.2.6'
     compile 'com.google.android.gms:play-services-location:10.2.6'
     compile 'com.github.drfonfon:android-geohash:0.3'
-    compile 'com.android.support:support-v4:25.3.1'
-    releaseCompile 'com.google.firebase:firebase-crash:10.2.6'
+
+    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    compile 'io.reactivex.rxjava2:rxjava:2.1.2'
+    compile "com.jakewharton.rxbinding2:rxbinding:$rxbindingVersion"
+    compile 'nl.2312:rxcupboard2:2.0'
+    compile 'com.mlsdev.rximagepicker:library:2.0.0'
+
+    compile 'com.hannesdorfmann.mosby3:mvi:3.0.4'
 
     compile 'com.jakewharton:butterknife:8.8.1'
-    compile "com.jakewharton.rxbinding2:rxbinding:$rxbindingVersion"
-    compile "com.jakewharton.rxbinding2:rxbinding-support-v4:$rxbindingVersion"
-    compile "com.jakewharton.rxbinding2:rxbinding-design:$rxbindingVersion"
-    compile "com.jakewharton.rxbinding2:rxbinding-appcompat-v7:$rxbindingVersion"
-    compile 'nl.2312:rxcupboard2:2.0'
-
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
-    compile 'com.google.code.findbugs:jsr305:2.0.1'
-    compile 'com.mlsdev.rximagepicker:library:2.0.0'
+
+    releaseCompile 'com.google.firebase:firebase-crash:10.2.6'
 }
 
 apply plugin: 'com.google.gms.google-services'

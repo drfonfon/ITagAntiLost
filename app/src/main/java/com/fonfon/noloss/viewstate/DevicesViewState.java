@@ -1,15 +1,15 @@
-package com.fonfon.noloss.ui.main;
+package com.fonfon.noloss.viewstate;
 
 import com.fonfon.noloss.lib.Device;
 
 import java.util.List;
 
-interface DevicesViewState {
+public interface DevicesViewState {
 
   final class DataState implements DevicesViewState {
     private final List<Device> data;
 
-    DataState(List<Device> data) {
+    public DataState(List<Device> data) {
       this.data = data;
     }
 

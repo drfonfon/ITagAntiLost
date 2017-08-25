@@ -2,6 +2,7 @@ package com.fonfon.noloss.ui.newdevice;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -12,11 +13,12 @@ import android.util.Pair;
 import android.view.View;
 import android.widget.TextView;
 
-import com.fonfon.noloss.ActivityEvent;
 import com.fonfon.noloss.R;
+import com.fonfon.noloss.lib.ActivityEvent;
+import com.fonfon.noloss.presenter.NewDevicePresenter;
 import com.fonfon.noloss.ui.DividerItemDecoration;
-import com.hannesdorfmann.mosby3.mvi.MviActivity;
-import com.jakewharton.rxbinding2.support.v4.widget.RxSwipeRefreshLayout;
+import com.fonfon.noloss.ui.LocationActivity;
+import com.fonfon.noloss.viewstate.NewDevicesViewState;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -24,7 +26,7 @@ import butterknife.Unbinder;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
 
-public final class NewDeviceActivity extends MviActivity<NewDeviceView, NewDevicePresenter> implements NewDeviceView {
+public final class NewDeviceActivity extends LocationActivity<NewDeviceView, NewDevicePresenter> implements NewDeviceView {
 
   public static Intent getIntent(Activity activity) {
     return new Intent(activity, NewDeviceActivity.class);
@@ -42,10 +44,11 @@ public final class NewDeviceActivity extends MviActivity<NewDeviceView, NewDevic
   private Unbinder unbinder;
   private final PublishSubject<ActivityEvent> lifecycleSubject = PublishSubject.create();
   private final PublishSubject<Pair<String, String>> newDeviceSubject = PublishSubject.create();
+  private final PublishSubject<Location> locationPublishSubject = PublishSubject.create();
   private NewDevicesAdapter adapter;
 
   @Override
-  protected void onCreate(Bundle savedInstanceState) {
+  public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_new_device);
     unbinder = ButterKnife.bind(this);
@@ -73,7 +76,7 @@ public final class NewDeviceActivity extends MviActivity<NewDeviceView, NewDevic
   }
 
   @Override
-  protected void onResume() {
+  public void onResume() {
     super.onResume();
     lifecycleSubject.onNext(ActivityEvent.RESUME);
   }
@@ -91,12 +94,23 @@ public final class NewDeviceActivity extends MviActivity<NewDeviceView, NewDevic
 
   @Override
   public Observable<Object> onRefreshIntent() {
-    return RxSwipeRefreshLayout.refreshes(refresh);
+    return new SwipeRefreshLayoutRefreshObservable(refresh);
   }
 
   @Override
   public Observable<Pair<String, String>> onDeviceIntent() {
     return newDeviceSubject.hide();
+  }
+
+  @Override
+  public Observable<Location> onNewLocation() {
+    return locationPublishSubject.hide();
+  }
+
+  @Override
+  public void onLocationChanged(Location location) {
+    super.onLocationChanged(location);
+    locationPublishSubject.onNext(location);
   }
 
   @Override

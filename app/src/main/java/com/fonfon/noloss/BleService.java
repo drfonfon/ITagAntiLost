@@ -270,9 +270,7 @@ public final class BleService extends Service {
     return bluetoothAdapter != null;
   }
 
-  private boolean connect(
-      @NonNull String address
-  ) {
+  private boolean connect(@NonNull String address) {
     if (bluetoothAdapter == null) {
       return false;
     }

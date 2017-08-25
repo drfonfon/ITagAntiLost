@@ -16,7 +16,6 @@ import android.widget.TextView;
 
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.lib.Device;
-import com.jakewharton.rxbinding2.support.v7.widget.RxToolbar;
 import com.jakewharton.rxbinding2.view.RxView;
 
 import java.util.ArrayList;
@@ -44,18 +43,19 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
   @Override
   public void onBindViewHolder(final DevicesAdapter.Holder holder, int position) {
     final Device device = devices.get(position);
+    int tintColor = device.isConnected() ? Color.BLACK : Color.WHITE;
     holder.toolbar.setTitle(device.getName());
-    holder.toolbar.setTitleTextColor(device.isConnected() ? Color.BLACK : Color.WHITE);
+    holder.toolbar.setTitleTextColor(tintColor);
 
     holder.toolbar.setSubtitle(device.getAddress());
-    holder.toolbar.setSubtitleTextColor(device.isConnected() ? Color.BLACK : Color.WHITE);
+    holder.toolbar.setSubtitleTextColor(tintColor);
 
     int red = ContextCompat.getColor(holder.toolbar.getContext(), R.color.mojo);
     int green = ContextCompat.getColor(holder.toolbar.getContext(), R.color.fern);
     holder.toolbar.setBackgroundColor(device.isConnected() ? green : red);
 
     Drawable moreIcon = ContextCompat.getDrawable(holder.toolbar.getContext(), R.drawable.ic_more);
-    DrawableCompat.setTint(moreIcon, device.isConnected() ? Color.BLACK : Color.WHITE);
+    DrawableCompat.setTint(moreIcon, tintColor);
     holder.toolbar.setOverflowIcon(moreIcon);
 
     holder.viewStatus.setEnabled(device.isConnected());
@@ -65,6 +65,8 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
     String disconnected = holder.textStatus.getContext().getString(R.string.status_disconnected);
 
     holder.textStatus.setText(device.isConnected() ? connected : disconnected);
+
+    holder.image.setImageBitmap(Device.getBitmapImage(device.getImage(), holder.image.getContext().getResources()));
   }
 
   @Override
@@ -97,7 +99,7 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
 
       toolbar.inflateMenu(R.menu.device_detail);
       RxView.clicks(fabAlert).subscribe(o -> listener.onAlert(devices.get(getAdapterPosition())));
-      RxToolbar.itemClicks(toolbar).subscribe(menuItem -> {
+      new ToolbarItemClickObservable(toolbar).subscribe(menuItem -> {
         switch (menuItem.getItemId()) {
           case R.id.menu_delete:
             listener.onDelete(devices.get(getAdapterPosition()));

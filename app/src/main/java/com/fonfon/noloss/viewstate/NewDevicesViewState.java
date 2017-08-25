@@ -1,4 +1,4 @@
-package com.fonfon.noloss.ui.newdevice;
+package com.fonfon.noloss.viewstate;
 
 public interface NewDevicesViewState {
 

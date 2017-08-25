@@ -52,7 +52,7 @@ public final class BitmapUtils {
     return imageString;
   }
 
-  public static Bitmap stringToBitMap(String encodedString) {
+  static Bitmap stringToBitMap(String encodedString) {
     try {
       byte[] encodeByte = Base64.decode(encodedString, Base64.DEFAULT);
       return BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);

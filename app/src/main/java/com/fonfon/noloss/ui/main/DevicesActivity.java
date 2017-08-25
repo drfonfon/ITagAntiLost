@@ -1,10 +1,10 @@
 package com.fonfon.noloss.ui.main;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -15,25 +15,28 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 import com.fonfon.geohash.GeoHash;
-import com.fonfon.noloss.ActivityEvent;
+import com.fonfon.noloss.lib.ActivityEvent;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.lib.BitmapUtils;
 import com.fonfon.noloss.lib.Device;
+import com.fonfon.noloss.presenter.DevicesPresenter;
+import com.fonfon.noloss.viewstate.DevicesViewState;
+import com.fonfon.noloss.ui.LocationActivity;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.hannesdorfmann.mosby3.mvi.MviActivity;
 import com.jakewharton.rxbinding2.view.RxView;
 import com.mlsdev.rximagepicker.RxImageConverters;
 import com.mlsdev.rximagepicker.RxImagePicker;
 import com.mlsdev.rximagepicker.Sources;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -42,12 +45,10 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
-public class DevicesActivity extends MviActivity<DevicesView, DevicesPresenter> implements DevicesView, DevicesAdapter.DeviceAdapterListener {
+public class DevicesActivity extends LocationActivity<DevicesView, DevicesPresenter> implements DevicesView, DevicesAdapter.DeviceAdapterListener {
 
   @BindView(R.id.recycler)
   RecyclerView recyclerView;
@@ -58,23 +59,25 @@ public class DevicesActivity extends MviActivity<DevicesView, DevicesPresenter> 
   @BindView(R.id.fab_new_device)
   FloatingActionButton fabNewDevice;
 
+  @BindView(R.id.button_refresh)
+  ImageButton buttonRefresh;
+
   @BindDimen(R.dimen.marker_size)
   int markerSize;
 
   private Unbinder unbinder;
   private DevicesAdapter adapter;
   private final PublishSubject<ActivityEvent> lifecycleSubject = PublishSubject.create();
-  private final PublishSubject<Device> renameDeviceSubject = PublishSubject.create();
   private final PublishSubject<Device> alertDeviceSubject = PublishSubject.create();
-  private final PublishSubject<Device> editImageDeviceSubject = PublishSubject.create();
+  private final PublishSubject<Device> updateDeviceSubject = PublishSubject.create();
   private final PublishSubject<Device> deleteDeviceSubject = PublishSubject.create();
 
   private List<Device> currentDevices;
   private GoogleMap googleMap;
-  private final ArrayList<Marker> markers = new ArrayList<>();
+  private boolean isCameraUpdated = false;
 
   @Override
-  protected void onCreate(Bundle savedInstanceState) {
+  public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_devices);
 
@@ -101,7 +104,7 @@ public class DevicesActivity extends MviActivity<DevicesView, DevicesPresenter> 
   }
 
   @Override
-  protected void onResume() {
+  public void onResume() {
     super.onResume();
     lifecycleSubject.onNext(ActivityEvent.RESUME);
   }
@@ -133,13 +136,13 @@ public class DevicesActivity extends MviActivity<DevicesView, DevicesPresenter> 
   }
 
   @Override
-  public Observable<Device> renameDeviceIntent() {
-    return renameDeviceSubject.hide();
+  public Observable<Device> updateDeviceIntent() {
+    return updateDeviceSubject.hide();
   }
 
   @Override
-  public Observable<Device> editImageDeviceIntent() {
-    return editImageDeviceSubject.hide();
+  public Observable<Object> refreshIntent() {
+    return RxView.clicks(buttonRefresh).share();
   }
 
   @Override
@@ -169,15 +172,16 @@ public class DevicesActivity extends MviActivity<DevicesView, DevicesPresenter> 
 
   @Override
   public void onRename(Device device) {
+    @SuppressLint("InflateParams")
     EditText edit = (EditText) LayoutInflater.from(this).inflate(R.layout.layout_edit_name, null);
     new AlertDialog.Builder(this)
-        .setTitle("Change name")
+        .setTitle(R.string.change_name)
         .setView(edit)
         .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss())
         .setPositiveButton(android.R.string.ok, (dialog, which) -> {
           if (edit.getText().toString().trim().length() > 0) {
             device.setName(edit.getText().toString().trim());
-            renameDeviceSubject.onNext(device);
+            updateDeviceSubject.onNext(device);
           }
           dialog.dismiss();
         })
@@ -186,14 +190,14 @@ public class DevicesActivity extends MviActivity<DevicesView, DevicesPresenter> 
 
   @Override
   public void onEditImage(Device device) {
-    //RxImagePicker.with(this).requestImage(Sources.GALLERY)
-      //  .observeOn(Schedulers.newThread())
-        //.flatMap(uri -> RxImageConverters.uriToBitmap(DevicesActivity.this, uri))
-        //.map(BitmapUtils::bitmapToString)
-        //.subscribe(onNe)
-
-
-    editImageDeviceSubject.onNext(device);
+    RxImagePicker.with(this).requestImage(Sources.GALLERY)
+        .observeOn(Schedulers.newThread())
+        .flatMap(uri -> RxImageConverters.uriToBitmap(DevicesActivity.this, uri))
+        .map(BitmapUtils::bitmapToString)
+        .subscribe(s -> {
+          device.setImage(s);
+          updateDeviceSubject.onNext(device);
+        });
   }
 
   @Override
@@ -207,28 +211,40 @@ public class DevicesActivity extends MviActivity<DevicesView, DevicesPresenter> 
   }
 
   private void showMarkers() {
-    for (Device device : currentDevices) {
-      GeoHash geoHash = GeoHash.fromString(device.getGeoHash());
-      Location center = geoHash.getCenter();
-      createMarker(new LatLng(center.getLatitude(), center.getLongitude()), device);
-    }
+    Observable
+        .fromIterable(currentDevices)
+        .subscribe(device -> {
+          Location center = GeoHash.fromString(device.getGeoHash()).getCenter();
+          Marker marker = googleMap.addMarker(new MarkerOptions()
+              .position(new LatLng(center.getLatitude(), center.getLongitude()))
+              .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))
+              .flat(true)
+              .title(device.getName())
+              .snippet(device.getAddress())
+          );
+          Bitmap bitmap = Device.getBitmapImage(device.getImage(), getResources());
+          Bitmap bmp = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
+          bitmap.recycle();
+          marker.setIcon(BitmapDescriptorFactory.fromBitmap(bmp));
+        });
   }
 
-  private void createMarker(LatLng point, Device deviceDB) {
-    Marker marker = googleMap.addMarker(new MarkerOptions()
-        .position(point)
-        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))
-        .flat(true)
-        .title(deviceDB.getName())
-        //.visible(!Device.ZERO_GEOHASH.equals(deviceDB.getGeoHash()))
-        .snippet(deviceDB.getAddress())
-    );
-    markers.add(marker);
-    //Bitmap bitmap = BitmapUtils.stringToBitMap(deviceDB.getImage());
-    //if (bitmap != null) {
-    //Bitmap bmp = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
-    //bitmap.recycle();
-    // marker.setIcon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher));
-    //}
+  @Override
+  public void onLocationChanged(Location location) {
+    super.onLocationChanged(location);
+    if (googleMap != null) {
+      if (!googleMap.isMyLocationEnabled()) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+          googleMap.setMyLocationEnabled(true);
+        }
+      }
+      if (!isCameraUpdated) {
+        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), googleMap.getMaxZoomLevel() - 4));
+        isCameraUpdated = true;
+      }
+    }
   }
 }

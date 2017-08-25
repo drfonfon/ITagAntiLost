@@ -1,13 +1,14 @@
 package com.fonfon.noloss.lib;
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
+import com.fonfon.noloss.R;
 import com.fonfon.noloss.db.DeviceDB;
 
-public class Device implements Parcelable {
+public final class Device {
 
-  public static final String ADDRESS = "address";
   public static final String ZERO_GEOHASH = "s00000000000";
 
   private Long _id;
@@ -25,14 +26,6 @@ public class Device implements Parcelable {
     this.name = deviceDB.getName();
     this.geoHash = deviceDB.getGeoHash();
     this.image = deviceDB.getImage();
-  }
-
-  protected Device(Parcel in) {
-    _id = in.readLong();
-    address = in.readString();
-    name = in.readString();
-    geoHash = in.readString();
-    image = in.readString();
   }
 
   public Long get_id() {
@@ -105,29 +98,14 @@ public class Device implements Parcelable {
     return hash;
   }
 
-  public static final Creator<Device> CREATOR = new Creator<Device>() {
-    @Override
-    public Device createFromParcel(Parcel in) {
-      return new Device(in);
+  public static  Bitmap getBitmapImage(String image, Resources resources) {
+    Bitmap bitmap = null;
+    if (!image.equals("img")) {
+      bitmap = BitmapUtils.stringToBitMap(image);
     }
-
-    @Override
-    public Device[] newArray(int size) {
-      return new Device[size];
+    if (bitmap == null) {
+      bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher);
     }
-  };
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeLong(_id);
-    dest.writeString(address);
-    dest.writeString(name);
-    dest.writeString(geoHash);
-    dest.writeString(image);
+    return bitmap;
   }
 }

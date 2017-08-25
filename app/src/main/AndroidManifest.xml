@@ -17,7 +17,6 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
-        android:name=".App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -27,8 +26,10 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key"/>
-        <activity android:name=".ui.main.DevicesActivity"
-                  android:screenOrientation="portrait">
+
+        <activity
+            android:name=".ui.main.DevicesActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -41,10 +42,6 @@
 
         <service
             android:name=".BleService"
-            android:enabled="true"
-            android:exported="false"/>
-        <service
-            android:name=".lib.SaveImageService"
             android:enabled="true"
             android:exported="false"/>
         <service

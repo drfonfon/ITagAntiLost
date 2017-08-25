@@ -4,16 +4,23 @@ import android.Manifest;
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 
+import com.fonfon.geohash.GeoHash;
 import com.fonfon.noloss.BleService;
+import com.fonfon.noloss.R;
+import com.fonfon.noloss.db.DbHelper;
+import com.fonfon.noloss.db.DeviceDB;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+
+import nl.nl2312.rxcupboard2.RxCupboard;
 
 public class LocationChangeService extends IntentService {
 
@@ -82,34 +89,18 @@ public class LocationChangeService extends IntentService {
   }
 
   private void updateDeviceLocation(final String address, final Location location) {
-//    Realm.getDefaultInstance().executeTransactionAsync(new Realm.Transaction() {
-//      @Override
-//      public void execute(Realm realm) {
-//        DeviceDB device = realm.where(DeviceDB.class).equalTo(DeviceDB.ADDRESS, address).findFirst();
-//        if (device != null) {
-//
-//          GeoHash geoHash = GeoHash.fromLocation(location, GeoHash.MAX_CHARACTER_PRECISION);
-//          device.setGeoHash(geoHash.toString());
-//
-//          Bitmap bitmap = BitmapUtils.stringToBitMap(device.getImage());
-//
-//          ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
-//              .notify(device.doHash(), new NotificationCompat.Builder(getApplicationContext())
-//                  .setLargeIcon(bitmap)
-//                  .setSmallIcon(R.drawable.ic_find_key)
-//                  .setContentTitle(getString(R.string.app_name))
-//                  .setContentText(device.getName() + " " + getString(R.string.location_updated))
-//                  .setVibrate(new long[]{1000, 1000})
-//                  .setSound(Settings.System.DEFAULT_NOTIFICATION_URI)
-//                  .build()
-//              );
-//          sendBroadcast(
-//              new Intent(LOCATION_CHANGED)
-//                  .putExtra(BleService.DEVICE_ADDRESS, device.getAddress())
-//                  .putExtra(LOCATION, location)
-//          );
-//        }
-//      }
-//    });
+    SQLiteDatabase database = DbHelper.getConnection(getApplicationContext());
+    RxCupboard
+        .withDefault(database)
+        .query(DeviceDB.class, "address = ?", address)
+        .doOnNext(deviceDB -> deviceDB.setGeoHash(GeoHash.fromLocation(location, GeoHash.MAX_CHARACTER_PRECISION).toString()))
+        .flatMapSingle(deviceDB -> RxCupboard.withDefault(database).put(deviceDB))
+        .doOnNext(device -> NotifyManager.showNotification(device, getApplicationContext(),
+            device.getName() + " " + getString(R.string.location_updated)))
+        .subscribe(device -> sendBroadcast(
+            new Intent(LOCATION_CHANGED)
+                .putExtra(BleService.DEVICE_ADDRESS, device.getAddress())
+                .putExtra(LOCATION, location)
+        ));
   }
 }

@@ -1,10 +1,13 @@
 package com.fonfon.noloss.db;
 
+import android.location.Location;
+
+import com.fonfon.geohash.GeoHash;
 import com.fonfon.noloss.lib.Device;
 
 import static com.fonfon.noloss.lib.Device.ZERO_GEOHASH;
 
-public class DeviceDB {
+public final class DeviceDB {
 
   private Long _id;
   private String address;
@@ -15,11 +18,11 @@ public class DeviceDB {
   public DeviceDB() {
   }
 
-  public DeviceDB(String address, String name, String defaultImage) {
+  public DeviceDB(String address, String name, String defaultImage, Location location) {
     this._id = Device.doHash(address);
     this.address = address;
     this.name = name;
-    geoHash = ZERO_GEOHASH;
+    geoHash = location == null ? ZERO_GEOHASH : GeoHash.fromLocation(location, GeoHash.MAX_CHARACTER_PRECISION).toString();
     this.image = defaultImage;
   }
 
