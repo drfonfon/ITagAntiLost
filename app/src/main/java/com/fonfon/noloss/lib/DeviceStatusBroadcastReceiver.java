@@ -11,7 +11,7 @@ import com.fonfon.noloss.db.DeviceDB;
 
 import nl.nl2312.rxcupboard2.RxCupboard;
 
-public class DeviceStatusBroadcastReceiver extends BroadcastReceiver {
+public final class DeviceStatusBroadcastReceiver extends BroadcastReceiver {
 
   @Override
   public void onReceive(final Context context, final Intent intent) {

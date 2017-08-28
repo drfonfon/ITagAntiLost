@@ -231,7 +231,6 @@ public abstract class LocationActivity<V extends MvpView, P extends MviPresenter
 
   @Override
   public void onConnectionFailed(@NonNull ConnectionResult result) {
-    Log.i(TAG, "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
     finish();
   }
 

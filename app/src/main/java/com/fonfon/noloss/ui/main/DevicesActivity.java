@@ -7,24 +7,27 @@ import android.graphics.Bitmap;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.AppCompatTextView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.fonfon.geohash.GeoHash;
-import com.fonfon.noloss.lib.ActivityEvent;
 import com.fonfon.noloss.R;
+import com.fonfon.noloss.lib.ActivityEvent;
 import com.fonfon.noloss.lib.BitmapUtils;
 import com.fonfon.noloss.lib.Device;
 import com.fonfon.noloss.presenter.DevicesPresenter;
-import com.fonfon.noloss.viewstate.DevicesViewState;
 import com.fonfon.noloss.ui.LocationActivity;
+import com.fonfon.noloss.viewstate.DevicesViewState;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -48,19 +51,25 @@ import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
-public class DevicesActivity extends LocationActivity<DevicesView, DevicesPresenter> implements DevicesView, DevicesAdapter.DeviceAdapterListener {
+public final class DevicesActivity extends LocationActivity<DevicesView, DevicesPresenter> implements DevicesView, DevicesAdapter.DeviceAdapterListener {
 
   @BindView(R.id.recycler)
   RecyclerView recyclerView;
 
   @BindView(R.id.text_total)
-  AppCompatTextView textTotal;
+  TextView textTotal;
 
-  @BindView(R.id.fab_new_device)
-  FloatingActionButton fabNewDevice;
+  @BindView(R.id.button_new_device)
+  ImageButton fabNewDevice;
 
   @BindView(R.id.button_refresh)
   ImageButton buttonRefresh;
+
+  @BindView(R.id.bottom_sheet)
+  LinearLayout bottomSheet;
+
+  @BindView(R.id.image_swipe_up)
+  ImageView imageSwipeUp;
 
   @BindDimen(R.dimen.marker_size)
   int markerSize;
@@ -91,16 +100,20 @@ public class DevicesActivity extends LocationActivity<DevicesView, DevicesPresen
         .getMapAsync(googleMap -> {
           this.googleMap = googleMap;
           if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-              != PackageManager.PERMISSION_GRANTED &&
+              == PackageManager.PERMISSION_GRANTED &&
               ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                  != PackageManager.PERMISSION_GRANTED) {
-            return;
+                  == PackageManager.PERMISSION_GRANTED) {
+            googleMap.setMyLocationEnabled(true);
           }
-          googleMap.setMyLocationEnabled(true);
           if (currentDevices != null) {
             showMarkers();
           }
         });
+
+    BottomSheetBehavior behavior = BottomSheetBehavior.from(bottomSheet);
+    View.OnClickListener expandClick = v -> behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+    textTotal.setOnClickListener(expandClick);
+    imageSwipeUp.setOnClickListener(expandClick);
   }
 
   @Override

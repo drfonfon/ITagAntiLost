@@ -22,7 +22,7 @@ import com.google.android.gms.location.LocationServices;
 
 import nl.nl2312.rxcupboard2.RxCupboard;
 
-public class LocationChangeService extends IntentService {
+public final class LocationChangeService extends IntentService {
 
   public static final String LOCATION_CHANGED = "com.fonfon.noloss.LOCATION_CHANGED";
   public static final String LOCATION = "LOCATION";

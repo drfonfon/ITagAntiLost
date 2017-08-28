@@ -26,7 +26,10 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:orientation="horizontal"
-            android:padding="@dimen/spacing_small">
+            android:paddingTop="@dimen/spacing_small"
+            android:paddingBottom="@dimen/spacing_small"
+            android:paddingStart="@dimen/spacing_small"
+            android:paddingEnd="@dimen/spacing_normal">
 
             <android.support.v7.widget.AppCompatImageView
                 android:id="@+id/imageDevice"
@@ -73,7 +76,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:src="@drawable/ic_volume_up"
-                app:fabSize="mini"/>
+                app:fabSize="normal"/>
 
         </LinearLayout>
 

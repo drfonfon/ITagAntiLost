@@ -4,7 +4,7 @@ import android.os.Looper;
 
 import io.reactivex.Observer;
 
-public class ObservableUtils {
+public final class ObservableUtils {
 
   public static boolean checkMainThread(Observer<?> observer) {
     if (Looper.myLooper() != Looper.getMainLooper()) {

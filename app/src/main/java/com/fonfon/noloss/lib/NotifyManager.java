@@ -9,7 +9,7 @@ import android.support.v4.app.NotificationCompat;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.db.DeviceDB;
 
-class NotifyManager {
+final class NotifyManager {
 
   static void showNotification(DeviceDB device, Context context, String message) {
     Bitmap bitmap = Device.getBitmapImage(device.getImage(), context.getResources());
