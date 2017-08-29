@@ -5,20 +5,22 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Location;
 
 import com.fonfon.noloss.BleService;
 import com.fonfon.noloss.db.DbHelper;
 import com.fonfon.noloss.db.DeviceDB;
 import com.fonfon.noloss.lib.Device;
 import com.fonfon.noloss.lib.LocationChangeService;
-import com.fonfon.noloss.viewstate.DevicesViewState;
 import com.fonfon.noloss.ui.main.DevicesView;
 import com.fonfon.noloss.ui.newdevice.NewDeviceActivity;
+import com.fonfon.noloss.viewstate.DevicesViewState;
 import com.hannesdorfmann.mosby3.mvi.MviBasePresenter;
 
 import java.util.ArrayList;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 import nl.nl2312.rxcupboard2.RxCupboard;
 
@@ -38,16 +40,15 @@ public final class DevicesPresenter extends MviBasePresenter<DevicesView, Device
           switch (action) {
             case BleService.DEVICE_CONNECTED:
               deviceConnect(address, true);
-              viewStatePublisher.onNext(new DevicesViewState.DataState(currentDevices));
               break;
             case BleService.DEVICE_DISCONNECTED:
               deviceConnect(address, false);
-              viewStatePublisher.onNext(new DevicesViewState.DataState(currentDevices));
               break;
             case LocationChangeService.LOCATION_CHANGED:
-              viewStatePublisher.onNext(new DevicesViewState.DataState(currentDevices));
+              deviceLocationChange(address, intent.getParcelableExtra(LocationChangeService.LOCATION));
               break;
           }
+          updateDevices();
         }
       }
     }
@@ -79,7 +80,7 @@ public final class DevicesPresenter extends MviBasePresenter<DevicesView, Device
       if (index > -1) {
         currentDevices.get(index).setAlerted(!currentDevices.get(index).isAlerted());
         BleService.alert(activity, currentDevices.get(index).getAddress(), currentDevices.get(index).isAlerted());
-        viewStatePublisher.onNext(new DevicesViewState.DataState(currentDevices));
+        updateDevices();
       }
     });
 
@@ -88,30 +89,28 @@ public final class DevicesPresenter extends MviBasePresenter<DevicesView, Device
           BleService.disconnect(activity, device.getAddress());
           currentDevices.remove(device);
         })
-        .flatMapSingle(device ->
-            RxCupboard
-                .withDefault(DbHelper.getConnection(activity))
-                .delete(DeviceDB.class, device.get_id())
+        .flatMapSingle(device -> RxCupboard
+            .withDefault(DbHelper.getConnection(activity))
+            .delete(DeviceDB.class, device.get_id())
         )
-        .subscribe(aLong -> viewStatePublisher.onNext(new DevicesViewState.DataState(currentDevices)));
+        .subscribe(p -> updateDevices());
 
     intent(DevicesView::updateDeviceIntent)
         .doOnNext(device -> {
           for (Device curDevice : currentDevices) {
-            if (curDevice.getAddress().equals(device.getAddress())) {
-              curDevice = device;
+            if (curDevice.get_id().equals(device.get_id())) {
+              curDevice.setName(device.getName());
+              curDevice.setImage(device.getImage());
               break;
             }
           }
         })
-        .flatMapSingle(device ->
-            RxCupboard
-                .withDefault(DbHelper.getConnection(activity))
-                .put(new DeviceDB(device))
+        .flatMapSingle(device -> RxCupboard
+            .withDefault(DbHelper.getConnection(activity))
+            .put(new DeviceDB(device))
+            .subscribeOn(Schedulers.newThread())
         )
-        .subscribe(aLong -> viewStatePublisher.onNext(new DevicesViewState.DataState(currentDevices)),
-            Throwable::printStackTrace
-        );
+        .subscribe(p -> updateDevices());
 
     intent(DevicesView::refreshIntent)
         .subscribe(o -> loadData());
@@ -148,10 +147,23 @@ public final class DevicesPresenter extends MviBasePresenter<DevicesView, Device
         .dispose();
   }
 
+  private void updateDevices() {
+    viewStatePublisher.onNext(new DevicesViewState.DataState(currentDevices));
+  }
+
   private void deviceConnect(String address, boolean connected) {
     for (int i = 0; i < currentDevices.size(); i++) {
       if (currentDevices.get(i).getAddress().equals(address)) {
         currentDevices.get(i).setConnected(connected);
+        break;
+      }
+    }
+  }
+
+  private void deviceLocationChange(String address, Location location) {
+    for (int i = 0; i < currentDevices.size(); i++) {
+      if (currentDevices.get(i).getAddress().equals(address)) {
+        currentDevices.get(i).setLocation(location);
         break;
       }
     }

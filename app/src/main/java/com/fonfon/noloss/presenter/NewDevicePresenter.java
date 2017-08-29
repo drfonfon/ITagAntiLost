@@ -17,8 +17,8 @@ import com.fonfon.noloss.BleService;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.db.DbHelper;
 import com.fonfon.noloss.db.DeviceDB;
-import com.fonfon.noloss.viewstate.NewDevicesViewState;
 import com.fonfon.noloss.ui.newdevice.NewDeviceView;
+import com.fonfon.noloss.viewstate.NewDevicesViewState;
 import com.hannesdorfmann.mosby3.mvi.MviBasePresenter;
 
 import java.util.ArrayList;
@@ -72,8 +72,7 @@ public final class NewDevicePresenter extends MviBasePresenter<NewDeviceView, Ne
       activity.finish();
     }
 
-    BluetoothManager bluetoothManager = (BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
-    bluetoothAdapter = bluetoothManager.getAdapter();
+    bluetoothAdapter = ((BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter();
   }
 
   @Override
@@ -92,15 +91,17 @@ public final class NewDevicePresenter extends MviBasePresenter<NewDeviceView, Ne
 
     intent(NewDeviceView::onRefreshIntent).subscribe(o -> refresh());
 
-    intent(NewDeviceView::onDeviceIntent).subscribe(pair -> {
-      String address = pair.first;
-      String name = pair.second.trim();
-      RxCupboard.withDefault(DbHelper.getConnection(activity)).put(
-          new DeviceDB(address, name, "img", currentLocation)
-      ).subscribe(
-          device -> activity.finish(),
-          throwable -> Toast.makeText(activity, R.string.add_device_error, Toast.LENGTH_SHORT).show());
-    });
+    intent(NewDeviceView::onDeviceIntent)
+        .flatMapSingle(pair -> {
+          String address = pair.first;
+          String name = pair.second.trim();
+          return RxCupboard.withDefault(DbHelper.getConnection(activity)).put(
+              new DeviceDB(address, name, "img", currentLocation)
+          );
+        })
+        .subscribe(device -> activity.finish(),
+            throwable -> Toast.makeText(activity, R.string.add_device_error, Toast.LENGTH_SHORT).show()
+        );
 
     intent(NewDeviceView::onNewLocation)
         .subscribe(location -> currentLocation = location);

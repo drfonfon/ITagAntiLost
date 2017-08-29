@@ -1,5 +1,6 @@
 package com.fonfon.noloss.ui.main;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
@@ -26,11 +27,21 @@ import butterknife.ButterKnife;
 
 final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
 
-  private final List<Device> devices = new ArrayList<>();
+  private final ArrayList<Device> devices = new ArrayList<>();
   private final DeviceAdapterListener listener;
 
-  DevicesAdapter(DeviceAdapterListener listener) {
+  private final int red;
+  private final int green;
+  private final String connected;
+  private final String disconnected;
+
+  DevicesAdapter(Context context, DeviceAdapterListener listener) {
     this.listener = listener;
+    red = ContextCompat.getColor(context, R.color.mojo);
+    green = ContextCompat.getColor(context, R.color.fern);
+
+    connected = context.getString(R.string.status_connected);
+    disconnected = context.getString(R.string.status_disconnected);
   }
 
   @Override
@@ -42,7 +53,10 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
 
   @Override
   public void onBindViewHolder(final DevicesAdapter.Holder holder, int position) {
-    final Device device = devices.get(position);
+    Device device = devices.get(position);
+
+    holder.image.setImageBitmap(Device.getBitmapImage(device.getImage(), holder.image.getContext().getResources()));
+
     int tintColor = device.isConnected() ? Color.BLACK : Color.WHITE;
     holder.toolbar.setTitle(device.getName());
     holder.toolbar.setTitleTextColor(tintColor);
@@ -50,8 +64,6 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
     holder.toolbar.setSubtitle(device.getAddress());
     holder.toolbar.setSubtitleTextColor(tintColor);
 
-    int red = ContextCompat.getColor(holder.toolbar.getContext(), R.color.mojo);
-    int green = ContextCompat.getColor(holder.toolbar.getContext(), R.color.fern);
     holder.toolbar.setBackgroundColor(device.isConnected() ? green : red);
 
     Drawable moreIcon = ContextCompat.getDrawable(holder.toolbar.getContext(), R.drawable.ic_more);
@@ -60,13 +72,7 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
 
     holder.viewStatus.setEnabled(device.isConnected());
     holder.fabAlert.setImageResource(device.isAlerted() ? R.drawable.ic_volume_off : R.drawable.ic_volume_up);
-
-    String connected = holder.textStatus.getContext().getString(R.string.status_connected);
-    String disconnected = holder.textStatus.getContext().getString(R.string.status_disconnected);
-
     holder.textStatus.setText(device.isConnected() ? connected : disconnected);
-
-    holder.image.setImageBitmap(Device.getBitmapImage(device.getImage(), holder.image.getContext().getResources()));
   }
 
   @Override
@@ -77,6 +83,7 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
   void setDevices(@NonNull List<Device> devices) {
     this.devices.clear();
     this.devices.addAll(devices);
+
     notifyDataSetChanged();
   }
 

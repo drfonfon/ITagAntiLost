@@ -101,6 +101,7 @@ public final class LocationChangeService extends IntentService {
             new Intent(LOCATION_CHANGED)
                 .putExtra(BleService.DEVICE_ADDRESS, device.getAddress())
                 .putExtra(LOCATION, location)
-        ));
+        ))
+        .dispose();
   }
 }

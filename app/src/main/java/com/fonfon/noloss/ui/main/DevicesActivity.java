@@ -48,7 +48,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import io.reactivex.Observable;
-import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
 public final class DevicesActivity extends LocationActivity<DevicesView, DevicesPresenter> implements DevicesView, DevicesAdapter.DeviceAdapterListener {
@@ -92,7 +91,7 @@ public final class DevicesActivity extends LocationActivity<DevicesView, Devices
 
     unbinder = ButterKnife.bind(this);
 
-    adapter = new DevicesAdapter(this);
+    adapter = new DevicesAdapter(this, this);
 
     recyclerView.setLayoutManager(new LinearLayoutManager(this));
     recyclerView.setAdapter(adapter);
@@ -164,8 +163,8 @@ public final class DevicesActivity extends LocationActivity<DevicesView, Devices
       currentDevices = ((DevicesViewState.DataState) state).getData();
       textTotal.setText(String.format(Locale.getDefault(), getString(R.string.total_devices), currentDevices.size()));
       adapter.setDevices(currentDevices);
+
       if (googleMap != null) {
-        googleMap.clear();
         showMarkers();
       }
     }
@@ -204,9 +203,8 @@ public final class DevicesActivity extends LocationActivity<DevicesView, Devices
   @Override
   public void onEditImage(Device device) {
     RxImagePicker.with(this).requestImage(Sources.GALLERY)
-        .observeOn(Schedulers.newThread())
         .flatMap(uri -> RxImageConverters.uriToBitmap(DevicesActivity.this, uri))
-        .map(BitmapUtils::bitmapToString)
+        .flatMap(BitmapUtils::bitmapToString)
         .subscribe(s -> {
           device.setImage(s);
           updateDeviceSubject.onNext(device);
@@ -224,6 +222,7 @@ public final class DevicesActivity extends LocationActivity<DevicesView, Devices
   }
 
   private void showMarkers() {
+    googleMap.clear();
     Observable
         .fromIterable(currentDevices)
         .subscribe(device -> {

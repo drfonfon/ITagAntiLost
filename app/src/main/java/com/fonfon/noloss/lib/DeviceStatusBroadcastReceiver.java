@@ -32,7 +32,8 @@ public final class DeviceStatusBroadcastReceiver extends BroadcastReceiver {
                 .subscribe(device -> {
                   String statusText = context.getResources().getString(R.string.status_disconnected);
                   NotifyManager.showNotification(device, context, device.getName() + " " + statusText);
-                });
+                })
+                .dispose();
             break;
         }
       }

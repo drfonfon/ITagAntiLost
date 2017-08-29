@@ -161,11 +161,12 @@ public abstract class LocationActivity<V extends MvpView, P extends MviPresenter
       requestLocationPermission();
       return;
     }
-    LocationServices.FusedLocationApi.requestLocationUpdates(
-        googleApiClient,
-        locationRequest,
-        this
-    ).setResultCallback(status -> mRequestingLocationUpdates = true);
+    if (googleApiClient.isConnected())
+      LocationServices.FusedLocationApi.requestLocationUpdates(
+          googleApiClient,
+          locationRequest,
+          this
+      ).setResultCallback(status -> mRequestingLocationUpdates = true);
   }
 
   protected void stopLocationUpdates() {

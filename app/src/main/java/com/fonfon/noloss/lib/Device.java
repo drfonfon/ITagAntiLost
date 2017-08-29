@@ -3,7 +3,9 @@ package com.fonfon.noloss.lib;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
 
+import com.fonfon.geohash.GeoHash;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.db.DeviceDB;
 
@@ -26,6 +28,17 @@ public final class Device {
     this.name = deviceDB.getName();
     this.geoHash = deviceDB.getGeoHash();
     this.image = deviceDB.getImage();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Device device = (Device) o;
+    return _id.equals(device.get_id()) &&
+        address.equals(device.getAddress()) &&
+        name.equals(device.getName()) &&
+        image.equals(device.getImage());
   }
 
   public Long get_id() {
@@ -80,6 +93,10 @@ public final class Device {
     isAlerted = alerted;
   }
 
+  public void setLocation(Location location) {
+    geoHash = location == null ? ZERO_GEOHASH : GeoHash.fromLocation(location, GeoHash.MAX_CHARACTER_PRECISION).toString();
+  }
+
   public static long doHash(String address) {
     int hash = 451;
     for (int i = 0; i < address.length(); i++) {
@@ -98,7 +115,7 @@ public final class Device {
     return hash;
   }
 
-  public static  Bitmap getBitmapImage(String image, Resources resources) {
+  public static Bitmap getBitmapImage(String image, Resources resources) {
     Bitmap bitmap = null;
     if (!image.equals("img")) {
       bitmap = BitmapUtils.stringToBitMap(image);
