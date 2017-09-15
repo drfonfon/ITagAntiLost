@@ -30,6 +30,7 @@ public final class DevicesPresenter extends MviBasePresenter<DevicesView, Device
   private PublishSubject<DevicesViewState> viewStatePublisher = PublishSubject.create();
   private ArrayList<Device> currentDevices = new ArrayList<>();
 
+  private boolean receiverRegistered = false;
   private final BroadcastReceiver receiver = new BroadcastReceiver() {
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -123,11 +124,15 @@ public final class DevicesPresenter extends MviBasePresenter<DevicesView, Device
     intentFilter.addAction(BleService.DEVICE_DISCONNECTED);
     intentFilter.addAction(LocationChangeService.LOCATION_CHANGED);
     activity.registerReceiver(receiver, intentFilter);
+    receiverRegistered = true;
     loadData();
   }
 
   private void pause() {
-    activity.unregisterReceiver(receiver);
+    if (receiverRegistered) {
+      activity.unregisterReceiver(receiver);
+      receiverRegistered = false;
+    }
     activity.startService(new Intent(activity, BleService.class));
   }
 

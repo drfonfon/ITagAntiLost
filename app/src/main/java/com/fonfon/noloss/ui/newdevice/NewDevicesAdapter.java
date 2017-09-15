@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.fonfon.noloss.R;
+import com.jakewharton.rxbinding2.view.RxView;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -36,6 +37,12 @@ final class NewDevicesAdapter extends RecyclerView.Adapter<NewDevicesAdapter.Hol
   }
 
   @Override
+  public void onViewRecycled(Holder holder) {
+    holder.itemView.setOnClickListener(null);
+    super.onViewRecycled(holder);
+  }
+
+  @Override
   public int getItemCount() {
     return devices.size();
   }
@@ -50,7 +57,7 @@ final class NewDevicesAdapter extends RecyclerView.Adapter<NewDevicesAdapter.Hol
     notifyDataSetChanged();
   }
 
-  class Holder extends RecyclerView.ViewHolder implements View.OnClickListener {
+  class Holder extends RecyclerView.ViewHolder {
 
     final TextView textName;
     final TextView textAddress;
@@ -59,15 +66,19 @@ final class NewDevicesAdapter extends RecyclerView.Adapter<NewDevicesAdapter.Hol
       super(view);
       textName = (TextView) view.findViewById(R.id.text_name);
       textAddress = (TextView) view.findViewById(R.id.text_address);
-      view.setOnClickListener(this);
+
+      RxView.clicks(view)
+          .map(o -> getAdapterPosition())
+          .filter(p -> p != RecyclerView.NO_POSITION)
+          .subscribe(p -> {
+            Set<String> keySet = devices.keySet();
+            String[] addresses = keySet.toArray(new String[keySet.size()]);
+            if(addresses.length > 0) {
+              listener.onDevice(addresses[p], devices.get(addresses[p]));
+            }
+          });
     }
 
-    @Override
-    public void onClick(View v) {
-      Set<String> keySet = devices.keySet();
-      String[] addresses = keySet.toArray(new String[keySet.size()]);
-      listener.onDevice(addresses[getAdapterPosition()], devices.get(addresses[getAdapterPosition()]));
-    }
   }
 
   interface Listener {
