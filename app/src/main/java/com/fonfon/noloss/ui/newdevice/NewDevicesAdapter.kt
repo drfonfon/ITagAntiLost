@@ -4,9 +4,8 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import com.fonfon.noloss.R
-import com.jakewharton.rxbinding2.view.RxView
+import kotlinx.android.synthetic.main.item_new_device.view.*
 import java.util.*
 
 internal class NewDevicesAdapter(private val listener: NewDevicesAdapter.Listener) : RecyclerView.Adapter<NewDevicesAdapter.Holder>() {
@@ -18,20 +17,12 @@ internal class NewDevicesAdapter(private val listener: NewDevicesAdapter.Listene
   )
 
   override fun onBindViewHolder(holder: Holder, position: Int) {
-    val keySet = devices.keys
-    val addresses = keySet.toTypedArray()
-    holder.textName.text = devices[addresses[position]]
-    holder.textAddress.text = addresses[position]
+    val addresses = devices.keys.toTypedArray()
+    holder.itemView.text_name.text = devices[addresses[position]]
+    holder.itemView.text_address.text = addresses[position]
   }
 
-  override fun onViewRecycled(holder: Holder) {
-    holder.itemView.setOnClickListener(null)
-    super.onViewRecycled(holder)
-  }
-
-  override fun getItemCount(): Int {
-    return devices.size
-  }
+  override fun getItemCount() = devices.size
 
   fun add(address: String, name: String) {
     devices[address] = name
@@ -45,21 +36,15 @@ internal class NewDevicesAdapter(private val listener: NewDevicesAdapter.Listene
 
   internal inner class Holder(view: View) : RecyclerView.ViewHolder(view) {
 
-    val textName: TextView = view.findViewById(R.id.text_name)
-    val textAddress: TextView = view.findViewById(R.id.text_address)
-
     init {
-
-      RxView.clicks(view)
-          .map { adapterPosition }
-          .filter { p -> p != RecyclerView.NO_POSITION }
-          .subscribe { p ->
-            val keySet = devices.keys
-            val addresses = keySet.toTypedArray()
-            if (addresses.isNotEmpty()) {
-              listener.onDevice(addresses[p], devices[addresses[p]])
-            }
+      view.setOnClickListener {
+        if (adapterPosition != RecyclerView.NO_POSITION) {
+          val addresses = devices.keys.toTypedArray()
+          if (addresses.isNotEmpty()) {
+            listener.onDevice(addresses[adapterPosition], devices[addresses[adapterPosition]])
           }
+        }
+      }
     }
 
   }

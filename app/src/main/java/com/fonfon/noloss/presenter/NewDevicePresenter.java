@@ -78,14 +78,11 @@ public final class NewDevicePresenter extends MviBasePresenter<NewDeviceView, Ne
   @Override
   protected void bindIntents() {
     intent(NewDeviceView::onLifecycleIntent)
-        .subscribe(activityEvent -> {
-          switch (activityEvent) {
-            case RESUME:
-              resume();
-              break;
-            case PAUSE:
-              pause();
-              break;
+        .subscribe(isResumed -> {
+          if (isResumed) {
+            resume();
+          } else {
+            pause();
           }
         });
 

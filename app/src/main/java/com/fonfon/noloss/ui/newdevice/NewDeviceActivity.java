@@ -1,7 +1,5 @@
 package com.fonfon.noloss.ui.newdevice;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -15,22 +13,16 @@ import android.widget.TextView;
 
 import com.fonfon.noloss.NewDevicesViewState;
 import com.fonfon.noloss.R;
-import com.fonfon.noloss.lib.ActivityEvent;
 import com.fonfon.noloss.presenter.NewDevicePresenter;
-import com.fonfon.noloss.ui.DividerItemDecoration;
 import com.fonfon.noloss.ui.LocationActivity;
 
 import butterknife.BindView;
-import io.reactivex.Observable;
-import io.reactivex.subjects.PublishSubject;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
 
 public final class NewDeviceActivity extends LocationActivity<NewDeviceView, NewDevicePresenter> implements NewDeviceView {
-
-    public static Intent getIntent(Activity activity) {
-        return new Intent(activity, NewDeviceActivity.class);
-    }
 
     @BindView(R.id.recycler)
     RecyclerView recycler;
@@ -42,7 +34,7 @@ public final class NewDeviceActivity extends LocationActivity<NewDeviceView, New
     TextView empty;
 
     private Unbinder unbinder;
-    private final PublishSubject<ActivityEvent> lifecycleSubject = PublishSubject.create();
+    private final PublishSubject<Boolean> lifecycleSubject = PublishSubject.create();
     private final PublishSubject<Pair<String, String>> newDeviceSubject = PublishSubject.create();
     private final PublishSubject<Location> locationPublishSubject = PublishSubject.create();
     private NewDevicesAdapter adapter;
@@ -56,8 +48,6 @@ public final class NewDeviceActivity extends LocationActivity<NewDeviceView, New
         adapter = new NewDevicesAdapter((address, name) -> newDeviceSubject.onNext(new Pair<>(address, name)));
         recycler.setLayoutManager(new LinearLayoutManager(this));
         recycler.setAdapter(adapter);
-        int padding = getResources().getDimensionPixelSize(R.dimen.spacing_normal);
-        recycler.addItemDecoration(new DividerItemDecoration(getDrawable(R.drawable.divider), padding));
 
         toolbar.setNavigationIcon(R.drawable.ic_back);
         toolbar.setNavigationOnClickListener(v -> finish());
@@ -78,18 +68,18 @@ public final class NewDeviceActivity extends LocationActivity<NewDeviceView, New
     @Override
     public void onResume() {
         super.onResume();
-        lifecycleSubject.onNext(ActivityEvent.RESUME);
+        lifecycleSubject.onNext(true);
     }
 
     @Override
     protected void onPause() {
-        lifecycleSubject.onNext(ActivityEvent.PAUSE);
+        lifecycleSubject.onNext(false);
         super.onPause();
     }
 
     @NonNull
     @Override
-    public Observable<ActivityEvent> onLifecycleIntent() {
+    public Observable<Boolean> onLifecycleIntent() {
         return lifecycleSubject.hide();
     }
 
@@ -128,8 +118,9 @@ public final class NewDeviceActivity extends LocationActivity<NewDeviceView, New
     }
 
     private void renderLoadingState(NewDevicesViewState.LoadingState state) {
-        if (state.isLoading())
+        if (state.isLoading()) {
             adapter.clear();
+        }
         refresh.setRefreshing(state.isLoading());
         empty.setVisibility(state.isLoading() || recycler.getAdapter().getItemCount() > 0 ? View.GONE : View.VISIBLE);
     }

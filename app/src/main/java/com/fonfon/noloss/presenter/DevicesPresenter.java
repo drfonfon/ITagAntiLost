@@ -61,17 +61,13 @@ public final class DevicesPresenter extends MviBasePresenter<DevicesView, Device
 
   @Override
   protected void bindIntents() {
-    intent(DevicesView::newDeviceIntent)
-        .subscribe(o -> activity.startActivity(NewDeviceActivity.getIntent(activity)));
 
     intent(DevicesView::onLifecycleIntent)
-        .subscribe(activityEvent -> {
-          switch (activityEvent) {
-            case RESUME:
-              resume();
-              return;
-            case PAUSE:
-              pause();
+        .subscribe(isResumed -> {
+          if (isResumed) {
+            resume();
+          } else {
+            pause();
           }
         });
 
@@ -119,7 +115,7 @@ public final class DevicesPresenter extends MviBasePresenter<DevicesView, Device
     subscribeViewState(viewStatePublisher.hide().observeOn(AndroidSchedulers.mainThread()), DevicesView::render);
   }
 
-  private void resume() {
+  public void resume() {
     IntentFilter intentFilter = new IntentFilter(BleService.DEVICE_CONNECTED);
     intentFilter.addAction(BleService.DEVICE_DISCONNECTED);
     intentFilter.addAction(LocationChangeService.LOCATION_CHANGED);
@@ -128,7 +124,7 @@ public final class DevicesPresenter extends MviBasePresenter<DevicesView, Device
     loadData();
   }
 
-  private void pause() {
+  public void pause() {
     if (receiverRegistered) {
       activity.unregisterReceiver(receiver);
       receiverRegistered = false;

@@ -10,6 +10,7 @@ import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -105,9 +106,10 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
       ButterKnife.bind(this, view);
 
       toolbar.inflateMenu(R.menu.device_detail);
-      RxView.clicks(fabAlert).subscribe(o -> listener.onAlert(devices.get(getAdapterPosition())));
-      new ToolbarItemClickObservable(toolbar).subscribe(menuItem -> {
-        switch (menuItem.getItemId()) {
+      fabAlert.setOnClickListener(v -> listener.onAlert(devices.get(getAdapterPosition())));
+
+      toolbar.setOnMenuItemClickListener(item -> {
+        switch (item.getItemId()) {
           case R.id.menu_delete:
             listener.onDelete(devices.get(getAdapterPosition()));
             break;
@@ -117,6 +119,7 @@ final class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.Holder> {
           case R.id.menu_image:
             listener.onEditImage(devices.get(getAdapterPosition()));
         }
+        return false;
       });
     }
   }

@@ -1,85 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="4dp"
-    >
+    android:orientation="vertical">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/zircon"
+        app:titleTextColor="@color/oil"
+        app:popupTheme="@style/AppTheme.PopupOverlay"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_gravity="center"
+        android:orientation="horizontal"
+        android:paddingTop="@dimen/spacing_small"
+        android:paddingBottom="@dimen/spacing_small"
+        android:paddingStart="@dimen/spacing_small"
+        android:paddingEnd="@dimen/spacing_normal">
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/zircon"
-            app:titleTextColor="@color/oil"
-            app:popupTheme="@style/AppTheme.PopupOverlay"/>
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/imageDevice"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:src="@mipmap/ic_launcher"/>
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:orientation="horizontal"
-            android:paddingTop="@dimen/spacing_small"
-            android:paddingBottom="@dimen/spacing_small"
-            android:paddingStart="@dimen/spacing_small"
-            android:paddingEnd="@dimen/spacing_normal">
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/spacing_small"
+            android:orientation="horizontal">
 
-            <android.support.v7.widget.AppCompatImageView
-                android:id="@+id/imageDevice"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:layout_gravity="center"
-                android:src="@mipmap/ic_launcher"/>
+            <android.support.v7.widget.AppCompatTextView
+                android:id="@+id/viewStatus"
+                android:layout_width="@dimen/icon_size"
+                android:layout_height="@dimen/icon_size"
+                android:background="@drawable/selector_connection"/>
 
-            <LinearLayout
+            <android.support.v7.widget.AppCompatTextView
+                android:id="@+id/textStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_marginStart="@dimen/spacing_small"
-                android:orientation="horizontal">
-
-                <android.support.v7.widget.AppCompatTextView
-                    android:id="@+id/viewStatus"
-                    android:layout_width="@dimen/icon_size"
-                    android:layout_height="@dimen/icon_size"
-                    android:background="@drawable/selector_connection"/>
-
-                <android.support.v7.widget.AppCompatTextView
-                    android:id="@+id/textStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:fontFamily="monospace"
-                    android:paddingEnd="@dimen/spacing_small"
-                    android:paddingStart="@dimen/spacing_small"
-                    android:text="@string/status_connected"
-                    android:textSize="@dimen/text_size_normal"
-                    tools:text="@string/status_connected"/>
-
-            </LinearLayout>
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"/>
-
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/fabAlert"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:src="@drawable/ic_volume_up"
-                app:fabSize="normal"/>
+                android:fontFamily="monospace"
+                android:paddingEnd="@dimen/spacing_small"
+                android:paddingStart="@dimen/spacing_small"
+                android:text="@string/status_connected"
+                android:textSize="@dimen/text_size_normal"
+                tools:text="@string/status_connected"/>
 
         </LinearLayout>
 
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fabAlert"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/ic_volume_up"
+            app:fabSize="normal"/>
+
     </LinearLayout>
 
-</android.support.v7.widget.CardView>
+</LinearLayout>

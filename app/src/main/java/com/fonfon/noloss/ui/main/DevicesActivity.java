@@ -2,6 +2,7 @@ package com.fonfon.noloss.ui.main;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
@@ -23,11 +24,11 @@ import android.widget.TextView;
 import com.fonfon.geohash.GeoHash;
 import com.fonfon.noloss.DevicesViewState;
 import com.fonfon.noloss.R;
-import com.fonfon.noloss.lib.ActivityEvent;
 import com.fonfon.noloss.lib.BitmapUtils;
 import com.fonfon.noloss.lib.Device;
 import com.fonfon.noloss.presenter.DevicesPresenter;
 import com.fonfon.noloss.ui.LocationActivity;
+import com.fonfon.noloss.ui.newdevice.NewDeviceActivity;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -75,7 +76,7 @@ public final class DevicesActivity extends LocationActivity<DevicesView, Devices
 
   private Unbinder unbinder;
   private DevicesAdapter adapter;
-  private final PublishSubject<ActivityEvent> lifecycleSubject = PublishSubject.create();
+  private final PublishSubject<Boolean> lifecycleSubject = PublishSubject.create();
   private final PublishSubject<Device> alertDeviceSubject = PublishSubject.create();
   private final PublishSubject<Device> updateDeviceSubject = PublishSubject.create();
   private final PublishSubject<Device> deleteDeviceSubject = PublishSubject.create();
@@ -113,30 +114,26 @@ public final class DevicesActivity extends LocationActivity<DevicesView, Devices
     View.OnClickListener expandClick = v -> behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
     textTotal.setOnClickListener(expandClick);
     imageSwipeUp.setOnClickListener(expandClick);
+
+    fabNewDevice.setOnClickListener(v -> startActivity(new Intent(this, NewDeviceActivity.class)));
   }
 
   @Override
   public void onResume() {
     super.onResume();
-    lifecycleSubject.onNext(ActivityEvent.RESUME);
+    lifecycleSubject.onNext(true);
   }
 
   @Override
   protected void onPause() {
-    lifecycleSubject.onNext(ActivityEvent.PAUSE);
+    lifecycleSubject.onNext(false);
     super.onPause();
   }
 
   @NonNull
   @Override
-  public Observable<ActivityEvent> onLifecycleIntent() {
+  public Observable<Boolean> onLifecycleIntent() {
     return lifecycleSubject.hide();
-  }
-
-  @NonNull
-  @Override
-  public Observable<Object> newDeviceIntent() {
-    return RxView.clicks(fabNewDevice).share();
   }
 
   @NonNull
