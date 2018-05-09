@@ -86,3 +86,10 @@ Temporary Items
 .apdisk
 
 /app/google-services.json
+
+.gradle
+/local.properties
+.idea
+.DS_Store
+/build
+/captures

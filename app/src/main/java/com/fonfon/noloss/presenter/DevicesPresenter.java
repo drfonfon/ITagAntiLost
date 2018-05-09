@@ -8,13 +8,13 @@ import android.content.IntentFilter;
 import android.location.Location;
 
 import com.fonfon.noloss.BleService;
+import com.fonfon.noloss.DevicesViewState;
 import com.fonfon.noloss.db.DbHelper;
 import com.fonfon.noloss.db.DeviceDB;
 import com.fonfon.noloss.lib.Device;
 import com.fonfon.noloss.lib.LocationChangeService;
 import com.fonfon.noloss.ui.main.DevicesView;
 import com.fonfon.noloss.ui.newdevice.NewDeviceActivity;
-import com.fonfon.noloss.viewstate.DevicesViewState;
 import com.hannesdorfmann.mosby3.mvi.MviBasePresenter;
 
 import java.util.ArrayList;

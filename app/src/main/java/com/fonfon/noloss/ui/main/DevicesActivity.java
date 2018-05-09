@@ -21,13 +21,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.fonfon.geohash.GeoHash;
+import com.fonfon.noloss.DevicesViewState;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.lib.ActivityEvent;
 import com.fonfon.noloss.lib.BitmapUtils;
 import com.fonfon.noloss.lib.Device;
 import com.fonfon.noloss.presenter.DevicesPresenter;
 import com.fonfon.noloss.ui.LocationActivity;
-import com.fonfon.noloss.viewstate.DevicesViewState;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -127,31 +127,37 @@ public final class DevicesActivity extends LocationActivity<DevicesView, Devices
     super.onPause();
   }
 
+  @NonNull
   @Override
   public Observable<ActivityEvent> onLifecycleIntent() {
     return lifecycleSubject.hide();
   }
 
+  @NonNull
   @Override
   public Observable<Object> newDeviceIntent() {
     return RxView.clicks(fabNewDevice).share();
   }
 
+  @NonNull
   @Override
   public Observable<Device> deleteDeviceIntent() {
     return deleteDeviceSubject.hide();
   }
 
+  @NonNull
   @Override
   public Observable<Device> alertDeviceIntent() {
     return alertDeviceSubject.hide();
   }
 
+  @NonNull
   @Override
   public Observable<Device> updateDeviceIntent() {
     return updateDeviceSubject.hide();
   }
 
+  @NonNull
   @Override
   public Observable<Object> refreshIntent() {
     return RxView.clicks(buttonRefresh).share();

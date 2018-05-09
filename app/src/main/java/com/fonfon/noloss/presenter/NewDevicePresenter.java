@@ -14,11 +14,11 @@ import android.os.ParcelUuid;
 import android.widget.Toast;
 
 import com.fonfon.noloss.BleService;
+import com.fonfon.noloss.NewDevicesViewState;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.db.DbHelper;
 import com.fonfon.noloss.db.DeviceDB;
 import com.fonfon.noloss.ui.newdevice.NewDeviceView;
-import com.fonfon.noloss.viewstate.NewDevicesViewState;
 import com.hannesdorfmann.mosby3.mvi.MviBasePresenter;
 
 import java.util.ArrayList;

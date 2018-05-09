@@ -1,5 +1,5 @@
 apply plugin: 'com.android.application'
-apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'kotlin-android'
 
 android {
     signingConfigs {
@@ -14,12 +14,12 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    compileSdkVersion 25
-    buildToolsVersion "25.0.3"
+    compileSdkVersion 27
+    buildToolsVersion '27.0.3'
     defaultConfig {
         applicationId "com.fonfon.noloss"
         minSdkVersion 21
-        targetSdkVersion 25
+        targetSdkVersion 27
         versionCode 9
         versionName "2.0.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -35,32 +35,37 @@ android {
 
 dependencies {
 
-    def rxbindingVersion = '2.0.0'
-    def supportVersion = '25.3.1'
+    def rxbindingVersion = '2.1.1'
+    def supportVersion = '27.1.1'
 
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    testCompile 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.12'
 
-    compile "com.android.support:design:$supportVersion"
-    compile "com.android.support:cardview-v7:$supportVersion"
-    compile 'com.google.android.gms:play-services-maps:10.2.6'
-    compile 'com.google.android.gms:play-services-location:10.2.6'
-    compile 'com.github.drfonfon:android-geohash:0.3'
+    implementation "com.android.support:design:$supportVersion"
+    implementation "com.android.support:cardview-v7:$supportVersion"
+    implementation 'com.google.android.gms:play-services-maps:15.0.1'
+    implementation 'com.google.android.gms:play-services-location:15.0.1'
+    implementation 'com.github.drfonfon:android-geohash:0.3'
 
-    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
-    compile 'io.reactivex.rxjava2:rxjava:2.1.2'
-    compile "com.jakewharton.rxbinding2:rxbinding:$rxbindingVersion"
-    compile 'nl.2312:rxcupboard2:2.0'
-    compile 'com.mlsdev.rximagepicker:library:2.0.0'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.12'
+    implementation "com.jakewharton.rxbinding2:rxbinding:$rxbindingVersion"
+    implementation 'nl.2312:rxcupboard2:2.0'
+    implementation 'com.mlsdev.rximagepicker:library:2.0.2'
 
-    compile 'com.hannesdorfmann.mosby3:mvi:3.0.4'
+    implementation 'com.hannesdorfmann.mosby3:mvi:3.1.0'
 
-    compile 'com.jakewharton:butterknife:8.8.1'
+    implementation 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
 
-    releaseCompile 'com.google.firebase:firebase-crash:10.2.6'
+    implementation 'com.google.firebase:firebase-core:15.0.2'
+    releaseImplementation 'com.google.firebase:firebase-crash:15.0.2'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 apply plugin: 'com.google.gms.google-services'
+repositories {
+    mavenCentral()
+}

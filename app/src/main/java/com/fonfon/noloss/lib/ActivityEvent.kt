@@ -1,6 +1,6 @@
-package com.fonfon.noloss.lib;
+package com.fonfon.noloss.lib
 
-public enum ActivityEvent {
+enum class ActivityEvent {
   CREATE,
   START,
   RESUME,
