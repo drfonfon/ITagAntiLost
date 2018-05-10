@@ -44,222 +44,205 @@ import com.mlsdev.rximagepicker.Sources;
 import java.util.List;
 import java.util.Locale;
 
-import butterknife.BindDimen;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.Unbinder;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
 
 public final class DevicesActivity extends LocationActivity<DevicesView, DevicesPresenter> implements DevicesView, DevicesAdapter.DeviceAdapterListener {
 
-  @BindView(R.id.recycler)
-  RecyclerView recyclerView;
+    RecyclerView recyclerView;
+    TextView textTotal;
+    ImageButton fabNewDevice;
+    ImageButton buttonRefresh;
+    LinearLayout bottomSheet;
+    ImageView imageSwipeUp;
+    int markerSize;
 
-  @BindView(R.id.text_total)
-  TextView textTotal;
+    private DevicesAdapter adapter;
+    private final PublishSubject<Boolean> lifecycleSubject = PublishSubject.create();
+    private final PublishSubject<Device> alertDeviceSubject = PublishSubject.create();
+    private final PublishSubject<Device> updateDeviceSubject = PublishSubject.create();
+    private final PublishSubject<Device> deleteDeviceSubject = PublishSubject.create();
 
-  @BindView(R.id.button_new_device)
-  ImageButton fabNewDevice;
+    private List<Device> currentDevices;
+    private GoogleMap googleMap;
+    private boolean isCameraUpdated = false;
 
-  @BindView(R.id.button_refresh)
-  ImageButton buttonRefresh;
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_devices);
 
-  @BindView(R.id.bottom_sheet)
-  LinearLayout bottomSheet;
+        recyclerView = findViewById(R.id.recycler);
+        textTotal = findViewById(R.id.text_total);
+        fabNewDevice = findViewById(R.id.button_new_device);
+        buttonRefresh = findViewById(R.id.button_refresh);
+        bottomSheet = findViewById(R.id.bottom_sheet);
+        imageSwipeUp = findViewById(R.id.image_swipe_up);
 
-  @BindView(R.id.image_swipe_up)
-  ImageView imageSwipeUp;
+        markerSize = getResources().getDimensionPixelSize(R.dimen.marker_size);
 
-  @BindDimen(R.dimen.marker_size)
-  int markerSize;
+        adapter = new DevicesAdapter(this, this);
 
-  private Unbinder unbinder;
-  private DevicesAdapter adapter;
-  private final PublishSubject<Boolean> lifecycleSubject = PublishSubject.create();
-  private final PublishSubject<Device> alertDeviceSubject = PublishSubject.create();
-  private final PublishSubject<Device> updateDeviceSubject = PublishSubject.create();
-  private final PublishSubject<Device> deleteDeviceSubject = PublishSubject.create();
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
+        ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
+                .getMapAsync(googleMap -> {
+                    this.googleMap = googleMap;
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED &&
+                            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                                    == PackageManager.PERMISSION_GRANTED) {
+                        googleMap.setMyLocationEnabled(true);
+                    }
+                    if (currentDevices != null) {
+                        showMarkers();
+                    }
+                });
 
-  private List<Device> currentDevices;
-  private GoogleMap googleMap;
-  private boolean isCameraUpdated = false;
+        BottomSheetBehavior behavior = BottomSheetBehavior.from(bottomSheet);
+        View.OnClickListener expandClick = v -> behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        textTotal.setOnClickListener(expandClick);
+        imageSwipeUp.setOnClickListener(expandClick);
 
-  @Override
-  public void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_devices);
-
-    unbinder = ButterKnife.bind(this);
-
-    adapter = new DevicesAdapter(this, this);
-
-    recyclerView.setLayoutManager(new LinearLayoutManager(this));
-    recyclerView.setAdapter(adapter);
-    ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-        .getMapAsync(googleMap -> {
-          this.googleMap = googleMap;
-          if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-              == PackageManager.PERMISSION_GRANTED &&
-              ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                  == PackageManager.PERMISSION_GRANTED) {
-            googleMap.setMyLocationEnabled(true);
-          }
-          if (currentDevices != null) {
-            showMarkers();
-          }
-        });
-
-    BottomSheetBehavior behavior = BottomSheetBehavior.from(bottomSheet);
-    View.OnClickListener expandClick = v -> behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-    textTotal.setOnClickListener(expandClick);
-    imageSwipeUp.setOnClickListener(expandClick);
-
-    fabNewDevice.setOnClickListener(v -> startActivity(new Intent(this, NewDeviceActivity.class)));
-  }
-
-  @Override
-  public void onResume() {
-    super.onResume();
-    lifecycleSubject.onNext(true);
-  }
-
-  @Override
-  protected void onPause() {
-    lifecycleSubject.onNext(false);
-    super.onPause();
-  }
-
-  @NonNull
-  @Override
-  public Observable<Boolean> onLifecycleIntent() {
-    return lifecycleSubject.hide();
-  }
-
-  @NonNull
-  @Override
-  public Observable<Device> deleteDeviceIntent() {
-    return deleteDeviceSubject.hide();
-  }
-
-  @NonNull
-  @Override
-  public Observable<Device> alertDeviceIntent() {
-    return alertDeviceSubject.hide();
-  }
-
-  @NonNull
-  @Override
-  public Observable<Device> updateDeviceIntent() {
-    return updateDeviceSubject.hide();
-  }
-
-  @NonNull
-  @Override
-  public Observable<Object> refreshIntent() {
-    return RxView.clicks(buttonRefresh).share();
-  }
-
-  @Override
-  public void render(DevicesViewState state) {
-    if (state instanceof DevicesViewState.DataState) {
-      currentDevices = ((DevicesViewState.DataState) state).getData();
-      textTotal.setText(String.format(Locale.getDefault(), getString(R.string.total_devices), currentDevices.size()));
-      adapter.setDevices(currentDevices);
-
-      if (googleMap != null) {
-        showMarkers();
-      }
+        fabNewDevice.setOnClickListener(v -> startActivity(new Intent(this, NewDeviceActivity.class)));
     }
-  }
 
-  @Override
-  protected void onDestroy() {
-    super.onDestroy();
-    unbinder.unbind();
-  }
+    @Override
+    public void onResume() {
+        super.onResume();
+        lifecycleSubject.onNext(true);
+    }
 
-  @NonNull
-  @Override
-  public DevicesPresenter createPresenter() {
-    return new DevicesPresenter(this);
-  }
+    @Override
+    protected void onPause() {
+        lifecycleSubject.onNext(false);
+        super.onPause();
+    }
 
-  @Override
-  public void onRename(Device device) {
-    @SuppressLint("InflateParams")
-    EditText edit = (EditText) LayoutInflater.from(this).inflate(R.layout.layout_edit_name, null);
-    new AlertDialog.Builder(this)
-        .setTitle(R.string.change_name)
-        .setView(edit)
-        .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss())
-        .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-          if (edit.getText().toString().trim().length() > 0) {
-            device.setName(edit.getText().toString().trim());
-            updateDeviceSubject.onNext(device);
-          }
-          dialog.dismiss();
-        })
-        .show();
-  }
+    @NonNull
+    @Override
+    public Observable<Boolean> onLifecycleIntent() {
+        return lifecycleSubject.hide();
+    }
 
-  @Override
-  public void onEditImage(Device device) {
-    RxImagePicker.with(this).requestImage(Sources.GALLERY)
-        .flatMap(uri -> RxImageConverters.uriToBitmap(DevicesActivity.this, uri))
-        .flatMap(BitmapUtils::bitmapToString)
-        .subscribe(s -> {
-          device.setImage(s);
-          updateDeviceSubject.onNext(device);
-        });
-  }
+    @NonNull
+    @Override
+    public Observable<Device> deleteDeviceIntent() {
+        return deleteDeviceSubject.hide();
+    }
 
-  @Override
-  public void onDelete(Device device) {
-    deleteDeviceSubject.onNext(device);
-  }
+    @NonNull
+    @Override
+    public Observable<Device> alertDeviceIntent() {
+        return alertDeviceSubject.hide();
+    }
 
-  @Override
-  public void onAlert(Device device) {
-    alertDeviceSubject.onNext(device);
-  }
+    @NonNull
+    @Override
+    public Observable<Device> updateDeviceIntent() {
+        return updateDeviceSubject.hide();
+    }
 
-  private void showMarkers() {
-    googleMap.clear();
-    Observable
-        .fromIterable(currentDevices)
-        .subscribe(device -> {
-          Location center = GeoHash.fromString(device.getGeoHash()).getCenter();
-          Marker marker = googleMap.addMarker(new MarkerOptions()
-              .position(new LatLng(center.getLatitude(), center.getLongitude()))
-              .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))
-              .flat(true)
-              .title(device.getName())
-              .snippet(device.getAddress())
-          );
-          Bitmap bitmap = Device.getBitmapImage(device.getImage(), getResources());
-          Bitmap bmp = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
-          bitmap.recycle();
-          marker.setIcon(BitmapDescriptorFactory.fromBitmap(bmp));
-        });
-  }
+    @NonNull
+    @Override
+    public Observable<Object> refreshIntent() {
+        return RxView.clicks(buttonRefresh).share();
+    }
 
-  @Override
-  public void onLocationChanged(Location location) {
-    super.onLocationChanged(location);
-    if (googleMap != null) {
-      if (!googleMap.isMyLocationEnabled()) {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-          googleMap.setMyLocationEnabled(true);
+    @Override
+    public void render(DevicesViewState state) {
+        if (state instanceof DevicesViewState.DataState) {
+            currentDevices = ((DevicesViewState.DataState) state).getData();
+            textTotal.setText(String.format(Locale.getDefault(), getString(R.string.total_devices), currentDevices.size()));
+            adapter.setDevices(currentDevices);
+
+            if (googleMap != null) {
+                showMarkers();
+            }
         }
-      }
-      if (!isCameraUpdated) {
-        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), googleMap.getMaxZoomLevel() - 4));
-        isCameraUpdated = true;
-      }
     }
-  }
+
+    @NonNull
+    @Override
+    public DevicesPresenter createPresenter() {
+        return new DevicesPresenter(this);
+    }
+
+    @Override
+    public void onRename(Device device) {
+        @SuppressLint("InflateParams")
+        EditText edit = (EditText) LayoutInflater.from(this).inflate(R.layout.layout_edit_name, null);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.change_name)
+                .setView(edit)
+                .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss())
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    if (edit.getText().toString().trim().length() > 0) {
+                        device.setName(edit.getText().toString().trim());
+                        updateDeviceSubject.onNext(device);
+                    }
+                    dialog.dismiss();
+                })
+                .show();
+    }
+
+    @Override
+    public void onEditImage(Device device) {
+        RxImagePicker.with(this).requestImage(Sources.GALLERY)
+                .flatMap(uri -> RxImageConverters.uriToBitmap(DevicesActivity.this, uri))
+                .flatMap(BitmapUtils::bitmapToString)
+                .subscribe(s -> {
+                    device.setImage(s);
+                    updateDeviceSubject.onNext(device);
+                });
+    }
+
+    @Override
+    public void onDelete(@NonNull Device device) {
+        deleteDeviceSubject.onNext(device);
+    }
+
+    @Override
+    public void onAlert(@NonNull Device device) {
+        alertDeviceSubject.onNext(device);
+    }
+
+    private void showMarkers() {
+        googleMap.clear();
+        Observable
+                .fromIterable(currentDevices)
+                .subscribe(device -> {
+                    Location center = GeoHash.fromString(device.getGeoHash()).getCenter();
+                    Marker marker = googleMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(center.getLatitude(), center.getLongitude()))
+                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))
+                            .flat(true)
+                            .title(device.getName())
+                            .snippet(device.getAddress())
+                    );
+                    Bitmap bitmap = Device.getBitmapImage(device.getImage(), getResources());
+                    Bitmap bmp = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
+                    bitmap.recycle();
+                    marker.setIcon(BitmapDescriptorFactory.fromBitmap(bmp));
+                });
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        super.onLocationChanged(location);
+        if (googleMap != null) {
+            if (!googleMap.isMyLocationEnabled()) {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED &&
+                        ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                                == PackageManager.PERMISSION_GRANTED) {
+                    googleMap.setMyLocationEnabled(true);
+                }
+            }
+            if (!isCameraUpdated) {
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), googleMap.getMaxZoomLevel() - 4));
+                isCameraUpdated = true;
+            }
+        }
+    }
 }

@@ -57,9 +57,6 @@ dependencies {
 
     implementation 'com.hannesdorfmann.mosby3:mvi:3.1.0'
 
-    implementation 'com.jakewharton:butterknife:8.8.1'
-    annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
-
     releaseImplementation 'com.google.firebase:firebase-crash:15.0.2'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
