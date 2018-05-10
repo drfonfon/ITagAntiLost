@@ -28,6 +28,8 @@ import com.fonfon.noloss.db.DbHelper;
 import com.fonfon.noloss.db.DeviceDB;
 import com.fonfon.noloss.ui.LocationActivity;
 import com.google.android.gms.common.api.Result;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,12 +48,10 @@ public final class NewDeviceActivity extends LocationActivity {
     Toolbar toolbar;
     TextView empty;
 
-    private final PublishSubject<Pair<String, String>> newDeviceSubject = PublishSubject.create();
     private NewDevicesAdapter adapter;
 
     private BluetoothAdapter bluetoothAdapter;
 
-    private PublishSubject<NewDevicesViewState> viewStatePublisher = PublishSubject.create();
     private Location currentLocation;
     private final List<String> currentAddresses = new ArrayList<>();
 
@@ -65,11 +65,9 @@ public final class NewDeviceActivity extends LocationActivity {
                     for (ParcelUuid uuid : uuids) {
                         if (uuid.getUuid().equals(BleService.FIND_ME_SERVICE)) {
                             if (!currentAddresses.contains(result.getDevice().getAddress()))
-                                viewStatePublisher.onNext(
-                                        new NewDevicesViewState.NewDeviceState(
-                                                result.getDevice().getAddress(),
-                                                result.getScanRecord().getDeviceName())
-                                );
+                                render(new NewDevicesViewState.NewDeviceState(
+                                        result.getDevice().getAddress(),
+                                        result.getScanRecord().getDeviceName()));
                             break;
                         }
                     }
@@ -89,7 +87,13 @@ public final class NewDeviceActivity extends LocationActivity {
         toolbar = findViewById(R.id.toolbar);
         empty = findViewById(R.id.empty_text);
 
-        adapter = new NewDevicesAdapter((address, name) -> newDeviceSubject.onNext(new Pair<>(address, name)));
+        adapter = new NewDevicesAdapter((address, name) -> {
+            RxCupboard.withDefault(DbHelper.getConnection(this)).put(
+                    new DeviceDB(address, name.trim(), currentLocation)
+            ).subscribe(device -> finish(),
+                    throwable -> Toast.makeText(this, R.string.add_device_error, Toast.LENGTH_SHORT).show()
+            );
+        });
         recycler.setLayoutManager(new LinearLayoutManager(this));
         recycler.setAdapter(adapter);
 
@@ -105,20 +109,15 @@ public final class NewDeviceActivity extends LocationActivity {
 
         refresh.setOnRefreshListener(this::refresh);
 
-        newDeviceSubject
-                .flatMapSingle(pair -> {
-                    String address = pair.first;
-                    String name = pair.second.trim();
-                    return RxCupboard.withDefault(DbHelper.getConnection(this)).put(
-                            new DeviceDB(address, name, "img", currentLocation)
-                    );
-                })
-                .subscribe(device -> finish(),
-                        throwable -> Toast.makeText(this, R.string.add_device_error, Toast.LENGTH_SHORT).show()
-                );
-
-        viewStatePublisher.subscribe(newDevicesViewState -> render(newDevicesViewState));
         refresh();
+
+        locationCallback = new LocationCallback(){
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                currentLocation = locationResult.getLastLocation();
+            }
+        };
     }
 
     @Override
@@ -131,12 +130,6 @@ public final class NewDeviceActivity extends LocationActivity {
     protected void onPause() {
         pause();
         super.onPause();
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        super.onLocationChanged(location);
-        currentLocation = location;
     }
 
     public void render(@NonNull NewDevicesViewState state) {
@@ -192,13 +185,13 @@ public final class NewDeviceActivity extends LocationActivity {
                 )
                 .doOnSuccess(list -> {
                     currentAddresses.addAll(list);
-                    viewStatePublisher.onNext(new NewDevicesViewState.LoadingState(true));
+                    render(new NewDevicesViewState.LoadingState(true));
                     bluetoothAdapter.getBluetoothLeScanner().startScan(scanCallback);
                 })
                 .flatMap(state -> Single.timer(8, TimeUnit.SECONDS))
                 .doOnSuccess(aLong -> {
                     bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
-                    viewStatePublisher.onNext(new NewDevicesViewState.LoadingState(false));
+                    render(new NewDevicesViewState.LoadingState(false));
                 })
                 .subscribe()
                 .dispose();

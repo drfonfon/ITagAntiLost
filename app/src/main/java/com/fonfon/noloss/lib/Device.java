@@ -17,7 +17,6 @@ public final class Device {
   private String address;
   private String name;
   private String geoHash;
-  private String image;
 
   private boolean isConnected = false;
   private boolean isAlerted = false;
@@ -27,7 +26,6 @@ public final class Device {
     this.address = deviceDB.getAddress();
     this.name = deviceDB.getName();
     this.geoHash = deviceDB.getGeoHash();
-    this.image = deviceDB.getImage();
   }
 
   @Override
@@ -37,8 +35,7 @@ public final class Device {
     Device device = (Device) o;
     return _id.equals(device.get_id()) &&
         address.equals(device.getAddress()) &&
-        name.equals(device.getName()) &&
-        image.equals(device.getImage());
+        name.equals(device.getName());
   }
 
   public Long get_id() {
@@ -67,14 +64,6 @@ public final class Device {
 
   public void setGeoHash(String geoHash) {
     this.geoHash = geoHash;
-  }
-
-  public String getImage() {
-    return image;
-  }
-
-  public void setImage(String image) {
-    this.image = image;
   }
 
   public boolean isConnected() {

@@ -29,7 +29,7 @@ internal class DevicesAdapter(context: Context, private val listener: DeviceAdap
   override fun onBindViewHolder(holder: DevicesAdapter.Holder, position: Int) {
     val device = devices[position]
 
-    holder.itemView.imageDevice.setImageBitmap(Device.getBitmapImage(device.image, holder.itemView.imageDevice.context.resources))
+    holder.itemView.imageDevice.setImageResource(R.mipmap.ic_launcher)
 
     val tintColor = if (device.isConnected) Color.BLACK else Color.WHITE
     holder.itemView.toolbar.title = device.name
@@ -67,7 +67,6 @@ internal class DevicesAdapter(context: Context, private val listener: DeviceAdap
         when (item.itemId) {
           R.id.menu_delete -> listener.onDelete(devices[adapterPosition])
           R.id.menu_rename -> listener.onRename(devices[adapterPosition])
-          R.id.menu_image -> listener.onEditImage(devices[adapterPosition])
         }
         false
       }
@@ -76,8 +75,6 @@ internal class DevicesAdapter(context: Context, private val listener: DeviceAdap
 
   internal interface DeviceAdapterListener {
     fun onRename(device: Device)
-
-    fun onEditImage(device: Device)
 
     fun onDelete(device: Device)
 

@@ -36,6 +36,8 @@ import com.fonfon.noloss.lib.LocationChangeService;
 import com.fonfon.noloss.ui.LocationActivity;
 import com.fonfon.noloss.ui.newdevice.NewDeviceActivity;
 import com.google.android.gms.common.api.Result;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -43,9 +45,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.mlsdev.rximagepicker.RxImageConverters;
-import com.mlsdev.rximagepicker.RxImagePicker;
-import com.mlsdev.rximagepicker.Sources;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,9 +68,6 @@ public final class DevicesActivity extends LocationActivity implements DevicesAd
     int markerSize;
 
     private DevicesAdapter adapter;
-    private final PublishSubject<Device> alertDeviceSubject = PublishSubject.create();
-    private final PublishSubject<Device> updateDeviceSubject = PublishSubject.create();
-    private final PublishSubject<Device> deleteDeviceSubject = PublishSubject.create();
 
     private GoogleMap googleMap;
     private boolean isCameraUpdated = false;
@@ -142,45 +138,44 @@ public final class DevicesActivity extends LocationActivity implements DevicesAd
 
         fabNewDevice.setOnClickListener(v -> startActivity(new Intent(this, NewDeviceActivity.class)));
 
-        deleteDeviceSubject
-                .doOnNext(device -> {
-                    BleService.disconnect(this, device.getAddress());
-                    currentDevices.remove(device);
-                })
-                .flatMapSingle(device -> RxCupboard
-                        .withDefault(DbHelper.getConnection(this))
-                        .delete(DeviceDB.class, device.get_id())
-                )
-                .subscribe(p -> updateDevices());
+        buttonRefresh.setOnClickListener(v -> loadData());
 
-        alertDeviceSubject
-                .subscribe(device -> {
-                    int index = currentDevices.indexOf(device);
-                    if (index > -1) {
-                        currentDevices.get(index).setAlerted(!currentDevices.get(index).isAlerted());
-                        BleService.alert(this, currentDevices.get(index).getAddress(), currentDevices.get(index).isAlerted());
-                        updateDevices();
-                    }
-                });
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
 
-        updateDeviceSubject
-                .doOnNext(device -> {
-                    for (Device curDevice : currentDevices) {
-                        if (curDevice.get_id().equals(device.get_id())) {
-                            curDevice.setName(device.getName());
-                            curDevice.setImage(device.getImage());
-                            break;
+                if (googleMap != null) {
+                    Location location = locationResult.getLastLocation();
+                    if (!googleMap.isMyLocationEnabled()) {
+                        if (ActivityCompat.checkSelfPermission(DevicesActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
+                                == PackageManager.PERMISSION_GRANTED &&
+                                ActivityCompat.checkSelfPermission(DevicesActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                                        == PackageManager.PERMISSION_GRANTED) {
+                            googleMap.setMyLocationEnabled(true);
                         }
                     }
-                })
-                .flatMapSingle(device -> RxCupboard
-                        .withDefault(DbHelper.getConnection(this))
-                        .put(new DeviceDB(device))
-                        .subscribeOn(Schedulers.newThread())
-                )
-                .subscribe(p -> updateDevices());
+                    if (!isCameraUpdated) {
+                        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), googleMap.getMaxZoomLevel() - 4));
+                        isCameraUpdated = true;
+                    }
+                }
+            }
+        };
+    }
 
-        buttonRefresh.setOnClickListener(v -> loadData());
+    private void updateDevice(Device device) {
+        for (Device curDevice : currentDevices) {
+            if (curDevice.get_id().equals(device.get_id())) {
+                curDevice.setName(device.getName());
+                break;
+            }
+        }
+        RxCupboard
+                .withDefault(DbHelper.getConnection(this))
+                .put(new DeviceDB(device))
+                .subscribeOn(Schedulers.newThread())
+                .subscribe(p -> updateDevices());
     }
 
     @Override
@@ -217,7 +212,7 @@ public final class DevicesActivity extends LocationActivity implements DevicesAd
                 .setPositiveButton(android.R.string.ok, (dialog, which) -> {
                     if (edit.getText().toString().trim().length() > 0) {
                         device.setName(edit.getText().toString().trim());
-                        updateDeviceSubject.onNext(device);
+                        updateDevice(device);
                     }
                     dialog.dismiss();
                 })
@@ -225,62 +220,36 @@ public final class DevicesActivity extends LocationActivity implements DevicesAd
     }
 
     @Override
-    public void onEditImage(@NonNull Device device) {
-        RxImagePicker.with(this).requestImage(Sources.GALLERY)
-                .flatMap(uri -> RxImageConverters.uriToBitmap(DevicesActivity.this, uri))
-                .flatMap(BitmapUtils::bitmapToString)
-                .subscribe(s -> {
-                    device.setImage(s);
-                    updateDeviceSubject.onNext(device);
-                });
-    }
-
-    @Override
     public void onDelete(@NonNull Device device) {
-        deleteDeviceSubject.onNext(device);
+        BleService.disconnect(this, device.getAddress());
+        currentDevices.remove(device);
+        RxCupboard
+                .withDefault(DbHelper.getConnection(this))
+                .delete(DeviceDB.class, device.get_id())
+                .subscribe(p -> updateDevices());
     }
 
     @Override
     public void onAlert(@NonNull Device device) {
-        alertDeviceSubject.onNext(device);
+        int index = currentDevices.indexOf(device);
+        if (index > -1) {
+            currentDevices.get(index).setAlerted(!currentDevices.get(index).isAlerted());
+            BleService.alert(this, currentDevices.get(index).getAddress(), currentDevices.get(index).isAlerted());
+            updateDevices();
+        }
     }
 
     private void showMarkers() {
         googleMap.clear();
-        Observable
-                .fromIterable(currentDevices)
-                .subscribe(device -> {
-                    Location center = GeoHash.fromString(device.getGeoHash()).getCenter();
-                    Marker marker = googleMap.addMarker(new MarkerOptions()
-                            .position(new LatLng(center.getLatitude(), center.getLongitude()))
-                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))
-                            .flat(true)
-                            .title(device.getName())
-                            .snippet(device.getAddress())
-                    );
-                    Bitmap bitmap = Device.getBitmapImage(device.getImage(), getResources());
-                    Bitmap bmp = Bitmap.createScaledBitmap(bitmap, markerSize, markerSize, false);
-                    bitmap.recycle();
-                    marker.setIcon(BitmapDescriptorFactory.fromBitmap(bmp));
-                });
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        super.onLocationChanged(location);
-        if (googleMap != null) {
-            if (!googleMap.isMyLocationEnabled()) {
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED &&
-                        ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                                == PackageManager.PERMISSION_GRANTED) {
-                    googleMap.setMyLocationEnabled(true);
-                }
-            }
-            if (!isCameraUpdated) {
-                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), googleMap.getMaxZoomLevel() - 4));
-                isCameraUpdated = true;
-            }
+        for (Device device: currentDevices) {
+            Location center = GeoHash.fromString(device.getGeoHash()).getCenter();
+            googleMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(center.getLatitude(), center.getLongitude()))
+                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))
+                    .flat(true)
+                    .title(device.getName())
+                    .snippet(device.getAddress())
+            );
         }
     }
 
