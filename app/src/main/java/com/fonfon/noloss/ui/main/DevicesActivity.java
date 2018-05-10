@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -30,12 +29,10 @@ import com.fonfon.noloss.DevicesViewState;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.db.DbHelper;
 import com.fonfon.noloss.db.DeviceDB;
-import com.fonfon.noloss.lib.BitmapUtils;
 import com.fonfon.noloss.lib.Device;
 import com.fonfon.noloss.lib.LocationChangeService;
 import com.fonfon.noloss.ui.LocationActivity;
 import com.fonfon.noloss.ui.newdevice.NewDeviceActivity;
-import com.google.android.gms.common.api.Result;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -43,18 +40,12 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
-import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.PublishSubject;
 import nl.nl2312.rxcupboard2.RxCupboard;
 
 public final class DevicesActivity extends LocationActivity implements DevicesAdapter.DeviceAdapterListener {

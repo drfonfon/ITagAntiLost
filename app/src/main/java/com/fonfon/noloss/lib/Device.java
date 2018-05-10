@@ -103,15 +103,4 @@ public final class Device {
 
     return hash;
   }
-
-  public static Bitmap getBitmapImage(String image, Resources resources) {
-    Bitmap bitmap = null;
-    if (!image.equals("img")) {
-      bitmap = BitmapUtils.stringToBitMap(image);
-    }
-    if (bitmap == null) {
-      bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher);
-    }
-    return bitmap;
-  }
 }
