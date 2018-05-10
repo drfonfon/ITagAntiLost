@@ -2,7 +2,10 @@ package com.fonfon.noloss.ui.main;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
@@ -22,13 +25,17 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.fonfon.geohash.GeoHash;
+import com.fonfon.noloss.BleService;
 import com.fonfon.noloss.DevicesViewState;
 import com.fonfon.noloss.R;
+import com.fonfon.noloss.db.DbHelper;
+import com.fonfon.noloss.db.DeviceDB;
 import com.fonfon.noloss.lib.BitmapUtils;
 import com.fonfon.noloss.lib.Device;
-import com.fonfon.noloss.presenter.DevicesPresenter;
+import com.fonfon.noloss.lib.LocationChangeService;
 import com.fonfon.noloss.ui.LocationActivity;
 import com.fonfon.noloss.ui.newdevice.NewDeviceActivity;
+import com.google.android.gms.common.api.Result;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -41,13 +48,18 @@ import com.mlsdev.rximagepicker.RxImageConverters;
 import com.mlsdev.rximagepicker.RxImagePicker;
 import com.mlsdev.rximagepicker.Sources;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
+import nl.nl2312.rxcupboard2.RxCupboard;
 
-public final class DevicesActivity extends LocationActivity<DevicesView, DevicesPresenter> implements DevicesView, DevicesAdapter.DeviceAdapterListener {
+public final class DevicesActivity extends LocationActivity implements DevicesAdapter.DeviceAdapterListener {
 
     RecyclerView recyclerView;
     TextView textTotal;
@@ -58,14 +70,40 @@ public final class DevicesActivity extends LocationActivity<DevicesView, Devices
     int markerSize;
 
     private DevicesAdapter adapter;
-    private final PublishSubject<Boolean> lifecycleSubject = PublishSubject.create();
     private final PublishSubject<Device> alertDeviceSubject = PublishSubject.create();
     private final PublishSubject<Device> updateDeviceSubject = PublishSubject.create();
     private final PublishSubject<Device> deleteDeviceSubject = PublishSubject.create();
 
-    private List<Device> currentDevices;
     private GoogleMap googleMap;
     private boolean isCameraUpdated = false;
+
+    private PublishSubject<DevicesViewState> viewStatePublisher = PublishSubject.create();
+    private ArrayList<Device> currentDevices = new ArrayList<>();
+
+    private boolean receiverRegistered = false;
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null) {
+                String action = intent.getAction();
+                String address = intent.getStringExtra(BleService.DEVICE_ADDRESS);
+                if (action != null && address != null) {
+                    switch (action) {
+                        case BleService.DEVICE_CONNECTED:
+                            deviceConnect(address, true);
+                            break;
+                        case BleService.DEVICE_DISCONNECTED:
+                            deviceConnect(address, false);
+                            break;
+                        case LocationChangeService.LOCATION_CHANGED:
+                            deviceLocationChange(address, intent.getParcelableExtra(LocationChangeService.LOCATION));
+                            break;
+                    }
+                    updateDevices();
+                }
+            }
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -105,54 +143,64 @@ public final class DevicesActivity extends LocationActivity<DevicesView, Devices
         imageSwipeUp.setOnClickListener(expandClick);
 
         fabNewDevice.setOnClickListener(v -> startActivity(new Intent(this, NewDeviceActivity.class)));
+
+        deleteDeviceSubject
+                .doOnNext(device -> {
+                    BleService.disconnect(this, device.getAddress());
+                    currentDevices.remove(device);
+                })
+                .flatMapSingle(device -> RxCupboard
+                        .withDefault(DbHelper.getConnection(this))
+                        .delete(DeviceDB.class, device.get_id())
+                )
+                .subscribe(p -> updateDevices());
+
+        alertDeviceSubject
+                .subscribe(device -> {
+                    int index = currentDevices.indexOf(device);
+                    if (index > -1) {
+                        currentDevices.get(index).setAlerted(!currentDevices.get(index).isAlerted());
+                        BleService.alert(this, currentDevices.get(index).getAddress(), currentDevices.get(index).isAlerted());
+                        updateDevices();
+                    }
+                });
+
+        updateDeviceSubject
+                .doOnNext(device -> {
+                    for (Device curDevice : currentDevices) {
+                        if (curDevice.get_id().equals(device.get_id())) {
+                            curDevice.setName(device.getName());
+                            curDevice.setImage(device.getImage());
+                            break;
+                        }
+                    }
+                })
+                .flatMapSingle(device -> RxCupboard
+                        .withDefault(DbHelper.getConnection(this))
+                        .put(new DeviceDB(device))
+                        .subscribeOn(Schedulers.newThread())
+                )
+                .subscribe(p -> updateDevices());
+
+        RxView.clicks(buttonRefresh).subscribe(o -> loadData());
+
+        viewStatePublisher.hide().observeOn(AndroidSchedulers.mainThread()).subscribe(devicesViewState -> render(devicesViewState));
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        lifecycleSubject.onNext(true);
+        resume();
     }
 
     @Override
     protected void onPause() {
-        lifecycleSubject.onNext(false);
+        pause();
         super.onPause();
     }
 
-    @NonNull
-    @Override
-    public Observable<Boolean> onLifecycleIntent() {
-        return lifecycleSubject.hide();
-    }
-
-    @NonNull
-    @Override
-    public Observable<Device> deleteDeviceIntent() {
-        return deleteDeviceSubject.hide();
-    }
-
-    @NonNull
-    @Override
-    public Observable<Device> alertDeviceIntent() {
-        return alertDeviceSubject.hide();
-    }
-
-    @NonNull
-    @Override
-    public Observable<Device> updateDeviceIntent() {
-        return updateDeviceSubject.hide();
-    }
-
-    @NonNull
-    @Override
-    public Observable<Object> refreshIntent() {
-        return RxView.clicks(buttonRefresh).share();
-    }
-
-    @Override
-    public void render(DevicesViewState state) {
+    public void render(@NonNull DevicesViewState state) {
         if (state instanceof DevicesViewState.DataState) {
-            currentDevices = ((DevicesViewState.DataState) state).getData();
             textTotal.setText(String.format(Locale.getDefault(), getString(R.string.total_devices), currentDevices.size()));
             adapter.setDevices(currentDevices);
 
@@ -162,14 +210,8 @@ public final class DevicesActivity extends LocationActivity<DevicesView, Devices
         }
     }
 
-    @NonNull
     @Override
-    public DevicesPresenter createPresenter() {
-        return new DevicesPresenter(this);
-    }
-
-    @Override
-    public void onRename(Device device) {
+    public void onRename(@NonNull Device device) {
         @SuppressLint("InflateParams")
         EditText edit = (EditText) LayoutInflater.from(this).inflate(R.layout.layout_edit_name, null);
         new AlertDialog.Builder(this)
@@ -242,6 +284,61 @@ public final class DevicesActivity extends LocationActivity<DevicesView, Devices
             if (!isCameraUpdated) {
                 googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), googleMap.getMaxZoomLevel() - 4));
                 isCameraUpdated = true;
+            }
+        }
+    }
+
+    public void resume() {
+        IntentFilter intentFilter = new IntentFilter(BleService.DEVICE_CONNECTED);
+        intentFilter.addAction(BleService.DEVICE_DISCONNECTED);
+        intentFilter.addAction(LocationChangeService.LOCATION_CHANGED);
+        registerReceiver(receiver, intentFilter);
+        receiverRegistered = true;
+        loadData();
+    }
+
+    public void pause() {
+        if (receiverRegistered) {
+            unregisterReceiver(receiver);
+            receiverRegistered = false;
+        }
+        startService(new Intent(this, BleService.class));
+    }
+
+    private void loadData() {
+        RxCupboard.withDefault(DbHelper.getConnection(this))
+                .query(DeviceDB.class)
+                .doOnNext(device -> BleService.connect(this, device.getAddress()))
+                .map(Device::new)
+                .toList()
+                .doOnSuccess(devices -> {
+                    currentDevices.clear();
+                    currentDevices.addAll(devices);
+                })
+                .map(DevicesViewState.DataState::new)
+                .cast(DevicesViewState.class)
+                .subscribe(devicesViewState -> viewStatePublisher.onNext(devicesViewState))
+                .dispose();
+    }
+
+    private void updateDevices() {
+        viewStatePublisher.onNext(new DevicesViewState.DataState(currentDevices));
+    }
+
+    private void deviceConnect(String address, boolean connected) {
+        for (int i = 0; i < currentDevices.size(); i++) {
+            if (currentDevices.get(i).getAddress().equals(address)) {
+                currentDevices.get(i).setConnected(connected);
+                break;
+            }
+        }
+    }
+
+    private void deviceLocationChange(String address, Location location) {
+        for (int i = 0; i < currentDevices.size(); i++) {
+            if (currentDevices.get(i).getAddress().equals(address)) {
+                currentDevices.get(i).setLocation(location);
+                break;
             }
         }
     }

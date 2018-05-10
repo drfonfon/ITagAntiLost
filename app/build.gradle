@@ -55,8 +55,6 @@ dependencies {
     implementation 'nl.2312:rxcupboard2:2.0'
     implementation 'com.mlsdev.rximagepicker:library:2.0.2'
 
-    implementation 'com.hannesdorfmann.mosby3:mvi:3.1.0'
-
     releaseImplementation 'com.google.firebase:firebase-crash:15.0.2'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }

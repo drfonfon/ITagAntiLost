@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
@@ -27,11 +28,8 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.hannesdorfmann.mosby3.mvi.MviActivity;
-import com.hannesdorfmann.mosby3.mvi.MviPresenter;
-import com.hannesdorfmann.mosby3.mvp.MvpView;
 
-public abstract class LocationActivity<V extends MvpView, P extends MviPresenter<V, ?>> extends MviActivity<V, P> implements
+public abstract class LocationActivity extends AppCompatActivity implements
         ConnectionCallbacks,
         OnConnectionFailedListener,
         LocationListener,

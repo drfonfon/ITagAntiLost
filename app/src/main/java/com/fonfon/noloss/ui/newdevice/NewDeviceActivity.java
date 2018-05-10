@@ -28,8 +28,6 @@ import com.fonfon.noloss.db.DbHelper;
 import com.fonfon.noloss.db.DeviceDB;
 import com.fonfon.noloss.ui.LocationActivity;
 import com.google.android.gms.common.api.Result;
-import com.hannesdorfmann.mosby3.mvi.MviPresenter;
-import com.hannesdorfmann.mosby3.mvp.MvpView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -129,32 +127,6 @@ public final class NewDeviceActivity extends LocationActivity {
         resume();
     }
 
-    @NonNull
-    @Override
-    public MviPresenter createPresenter() {
-        return new MviPresenter() {
-            @Override
-            public void attachView(@NonNull MvpView view) {
-
-            }
-
-            @Override
-            public void detachView(boolean retainInstance) {
-
-            }
-
-            @Override
-            public void detachView() {
-
-            }
-
-            @Override
-            public void destroy() {
-
-            }
-        };
-    }
-
     @Override
     protected void onPause() {
         pause();
@@ -230,10 +202,5 @@ public final class NewDeviceActivity extends LocationActivity {
                 })
                 .subscribe()
                 .dispose();
-    }
-
-    @Override
-    public void onResult(@NonNull Result result) {
-
     }
 }
