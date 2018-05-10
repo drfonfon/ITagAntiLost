@@ -43,7 +43,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.jakewharton.rxbinding2.view.RxView;
 import com.mlsdev.rximagepicker.RxImageConverters;
 import com.mlsdev.rximagepicker.RxImagePicker;
 import com.mlsdev.rximagepicker.Sources;
@@ -77,7 +76,6 @@ public final class DevicesActivity extends LocationActivity implements DevicesAd
     private GoogleMap googleMap;
     private boolean isCameraUpdated = false;
 
-    private PublishSubject<DevicesViewState> viewStatePublisher = PublishSubject.create();
     private ArrayList<Device> currentDevices = new ArrayList<>();
 
     private boolean receiverRegistered = false;
@@ -182,9 +180,7 @@ public final class DevicesActivity extends LocationActivity implements DevicesAd
                 )
                 .subscribe(p -> updateDevices());
 
-        RxView.clicks(buttonRefresh).subscribe(o -> loadData());
-
-        viewStatePublisher.hide().observeOn(AndroidSchedulers.mainThread()).subscribe(devicesViewState -> render(devicesViewState));
+        buttonRefresh.setOnClickListener(v -> loadData());
     }
 
     @Override
@@ -317,12 +313,12 @@ public final class DevicesActivity extends LocationActivity implements DevicesAd
                 })
                 .map(DevicesViewState.DataState::new)
                 .cast(DevicesViewState.class)
-                .subscribe(devicesViewState -> viewStatePublisher.onNext(devicesViewState))
+                .subscribe(devicesViewState -> render(devicesViewState))
                 .dispose();
     }
 
     private void updateDevices() {
-        viewStatePublisher.onNext(new DevicesViewState.DataState(currentDevices));
+        render(new DevicesViewState.DataState(currentDevices));
     }
 
     private void deviceConnect(String address, boolean connected) {
