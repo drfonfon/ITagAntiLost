@@ -47,7 +47,6 @@ public final class NewDeviceActivity extends LocationActivity {
     TextView empty;
 
     private final PublishSubject<Pair<String, String>> newDeviceSubject = PublishSubject.create();
-    private final PublishSubject<Location> locationPublishSubject = PublishSubject.create();
     private NewDevicesAdapter adapter;
 
     private BluetoothAdapter bluetoothAdapter;
@@ -104,7 +103,8 @@ public final class NewDeviceActivity extends LocationActivity {
 
         bluetoothAdapter = ((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter();
 
-        new SwipeRefreshLayoutRefreshObservable(refresh).subscribe(o -> refresh());
+        refresh.setOnRefreshListener(this::refresh);
+
         newDeviceSubject
                 .flatMapSingle(pair -> {
                     String address = pair.first;
@@ -117,8 +117,8 @@ public final class NewDeviceActivity extends LocationActivity {
                         throwable -> Toast.makeText(this, R.string.add_device_error, Toast.LENGTH_SHORT).show()
                 );
 
-        locationPublishSubject.subscribe(location -> currentLocation = location);
         viewStatePublisher.subscribe(newDevicesViewState -> render(newDevicesViewState));
+        refresh();
     }
 
     @Override
@@ -136,7 +136,7 @@ public final class NewDeviceActivity extends LocationActivity {
     @Override
     public void onLocationChanged(Location location) {
         super.onLocationChanged(location);
-        locationPublishSubject.onNext(location);
+        currentLocation = location;
     }
 
     public void render(@NonNull NewDevicesViewState state) {

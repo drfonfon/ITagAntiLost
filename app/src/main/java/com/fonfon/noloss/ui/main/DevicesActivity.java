@@ -229,7 +229,7 @@ public final class DevicesActivity extends LocationActivity implements DevicesAd
     }
 
     @Override
-    public void onEditImage(Device device) {
+    public void onEditImage(@NonNull Device device) {
         RxImagePicker.with(this).requestImage(Sources.GALLERY)
                 .flatMap(uri -> RxImageConverters.uriToBitmap(DevicesActivity.this, uri))
                 .flatMap(BitmapUtils::bitmapToString)
