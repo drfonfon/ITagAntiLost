@@ -4,8 +4,7 @@ import android.location.Location
 
 import com.fonfon.geohash.GeoHash
 import com.fonfon.noloss.lib.Device
-
-import com.fonfon.noloss.lib.Device.ZERO_GEOHASH
+import com.fonfon.noloss.lib.Device.Companion.ZERO_GEOHASH
 
 class DeviceDB {
 

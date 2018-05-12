@@ -10,34 +10,28 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.ParcelUuid;
-import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Pair;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.fonfon.noloss.BleService;
-import com.fonfon.noloss.NewDevicesViewState;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.db.DbHelper;
 import com.fonfon.noloss.db.DeviceDB;
 import com.fonfon.noloss.ui.LocationActivity;
-import com.google.android.gms.common.api.Result;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationResult;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Single;
-import io.reactivex.subjects.PublishSubject;
-import nl.nl2312.rxcupboard2.RxCupboard;
+import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 
 public final class NewDeviceActivity extends LocationActivity {
 
@@ -65,9 +59,7 @@ public final class NewDeviceActivity extends LocationActivity {
                     for (ParcelUuid uuid : uuids) {
                         if (uuid.getUuid().equals(BleService.FIND_ME_SERVICE)) {
                             if (!currentAddresses.contains(result.getDevice().getAddress()))
-                                render(new NewDevicesViewState.NewDeviceState(
-                                        result.getDevice().getAddress(),
-                                        result.getScanRecord().getDeviceName()));
+                                renderDataState(result.getDevice().getAddress(), result.getScanRecord().getDeviceName());
                             break;
                         }
                     }
@@ -88,11 +80,8 @@ public final class NewDeviceActivity extends LocationActivity {
         empty = findViewById(R.id.empty_text);
 
         adapter = new NewDevicesAdapter((address, name) -> {
-            RxCupboard.withDefault(DbHelper.getConnection(this)).put(
-                    new DeviceDB(address, name.trim(), currentLocation)
-            ).subscribe(device -> finish(),
-                    throwable -> Toast.makeText(this, R.string.add_device_error, Toast.LENGTH_SHORT).show()
-            );
+            cupboard().withDatabase(DbHelper.getConnection(this)).put(new DeviceDB(address, name.trim(), currentLocation));
+            finish();
         });
         recycler.setLayoutManager(new LinearLayoutManager(this));
         recycler.setAdapter(adapter);
@@ -111,7 +100,7 @@ public final class NewDeviceActivity extends LocationActivity {
 
         refresh();
 
-        locationCallback = new LocationCallback(){
+        locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
@@ -132,26 +121,16 @@ public final class NewDeviceActivity extends LocationActivity {
         super.onPause();
     }
 
-    public void render(@NonNull NewDevicesViewState state) {
-        if (state instanceof NewDevicesViewState.LoadingState) {
-            renderLoadingState((NewDevicesViewState.LoadingState) state);
-        } else if (state instanceof NewDevicesViewState.NewDeviceState) {
-            renderDataState((NewDevicesViewState.NewDeviceState) state);
-        } else {
-            throw new IllegalArgumentException("Don't know how to render viewState " + state);
-        }
-    }
-
-    private void renderLoadingState(NewDevicesViewState.LoadingState state) {
-        if (state.isLoading()) {
+    private void renderLoadingState(boolean isLoading) {
+        if (isLoading) {
             adapter.clear();
         }
-        refresh.setRefreshing(state.isLoading());
-        empty.setVisibility(state.isLoading() || recycler.getAdapter().getItemCount() > 0 ? View.GONE : View.VISIBLE);
+        refresh.setRefreshing(isLoading);
+        empty.setVisibility(isLoading || recycler.getAdapter().getItemCount() > 0 ? View.GONE : View.VISIBLE);
     }
 
-    private void renderDataState(NewDevicesViewState.NewDeviceState state) {
-        adapter.add(state.getAddress(), state.getName());
+    private void renderDataState(String address, String name) {
+        adapter.add(address, name);
     }
 
     private void resume() {
@@ -175,25 +154,22 @@ public final class NewDeviceActivity extends LocationActivity {
     }
 
     private void refresh() {
-        Single
-                .just(new NewDevicesViewState.LoadingState(true))
-                .flatMap(state -> RxCupboard
-                        .withDefault(DbHelper.getConnection(this))
-                        .query(DeviceDB.class)
-                        .map(DeviceDB::getAddress)
-                        .toList()
-                )
-                .doOnSuccess(list -> {
-                    currentAddresses.addAll(list);
-                    render(new NewDevicesViewState.LoadingState(true));
-                    bluetoothAdapter.getBluetoothLeScanner().startScan(scanCallback);
-                })
-                .flatMap(state -> Single.timer(8, TimeUnit.SECONDS))
-                .doOnSuccess(aLong -> {
-                    bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
-                    render(new NewDevicesViewState.LoadingState(false));
-                })
-                .subscribe()
-                .dispose();
+        List<DeviceDB> devices = cupboard()
+                .withDatabase(DbHelper.getConnection(this))
+                .query(DeviceDB.class)
+                .list();
+        List<String> addresses = new ArrayList<>();
+        for (DeviceDB device : devices) {
+            addresses.add(device.getAddress());
+        }
+
+        currentAddresses.addAll(addresses);
+        renderLoadingState(true);
+        bluetoothAdapter.getBluetoothLeScanner().startScan(scanCallback);
+
+        new Handler().postDelayed(() -> {
+            bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
+            renderLoadingState(false);
+        }, 8000);
     }
 }

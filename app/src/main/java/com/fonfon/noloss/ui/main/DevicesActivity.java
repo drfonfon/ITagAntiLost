@@ -25,7 +25,6 @@ import android.widget.TextView;
 
 import com.fonfon.geohash.GeoHash;
 import com.fonfon.noloss.BleService;
-import com.fonfon.noloss.DevicesViewState;
 import com.fonfon.noloss.R;
 import com.fonfon.noloss.db.DbHelper;
 import com.fonfon.noloss.db.DeviceDB;
@@ -43,10 +42,10 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
-import io.reactivex.schedulers.Schedulers;
-import nl.nl2312.rxcupboard2.RxCupboard;
+import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 
 public final class DevicesActivity extends LocationActivity implements DevicesAdapter.DeviceAdapterListener {
 
@@ -84,7 +83,7 @@ public final class DevicesActivity extends LocationActivity implements DevicesAd
                             deviceLocationChange(address, intent.getParcelableExtra(LocationChangeService.LOCATION));
                             break;
                     }
-                    updateDevices();
+                    render();
                 }
             }
         }
@@ -162,11 +161,8 @@ public final class DevicesActivity extends LocationActivity implements DevicesAd
                 break;
             }
         }
-        RxCupboard
-                .withDefault(DbHelper.getConnection(this))
-                .put(new DeviceDB(device))
-                .subscribeOn(Schedulers.newThread())
-                .subscribe(p -> updateDevices());
+        cupboard().withDatabase(DbHelper.getConnection(this)).put(new DeviceDB(device));
+        render();
     }
 
     @Override
@@ -181,14 +177,12 @@ public final class DevicesActivity extends LocationActivity implements DevicesAd
         super.onPause();
     }
 
-    public void render(@NonNull DevicesViewState state) {
-        if (state instanceof DevicesViewState.DataState) {
-            textTotal.setText(String.format(Locale.getDefault(), getString(R.string.total_devices), currentDevices.size()));
-            adapter.setDevices(currentDevices);
+    public void render() {
+        textTotal.setText(String.format(Locale.getDefault(), getString(R.string.total_devices), currentDevices.size()));
+        adapter.setDevices(currentDevices);
 
-            if (googleMap != null) {
-                showMarkers();
-            }
+        if (googleMap != null) {
+            showMarkers();
         }
     }
 
@@ -214,10 +208,8 @@ public final class DevicesActivity extends LocationActivity implements DevicesAd
     public void onDelete(@NonNull Device device) {
         BleService.disconnect(this, device.getAddress());
         currentDevices.remove(device);
-        RxCupboard
-                .withDefault(DbHelper.getConnection(this))
-                .delete(DeviceDB.class, device.get_id())
-                .subscribe(p -> updateDevices());
+        cupboard().withDatabase(DbHelper.getConnection(this)).delete(DeviceDB.class, device.get_id());
+        render();
     }
 
     @Override
@@ -226,7 +218,7 @@ public final class DevicesActivity extends LocationActivity implements DevicesAd
         if (index > -1) {
             currentDevices.get(index).setAlerted(!currentDevices.get(index).isAlerted());
             BleService.alert(this, currentDevices.get(index).getAddress(), currentDevices.get(index).isAlerted());
-            updateDevices();
+            render();
         }
     }
 
@@ -262,23 +254,19 @@ public final class DevicesActivity extends LocationActivity implements DevicesAd
     }
 
     private void loadData() {
-        RxCupboard.withDefault(DbHelper.getConnection(this))
+        List<DeviceDB> list = cupboard().withDatabase(DbHelper.getConnection(this))
                 .query(DeviceDB.class)
-                .doOnNext(device -> BleService.connect(this, device.getAddress()))
-                .map(Device::new)
-                .toList()
-                .doOnSuccess(devices -> {
-                    currentDevices.clear();
-                    currentDevices.addAll(devices);
-                })
-                .map(DevicesViewState.DataState::new)
-                .cast(DevicesViewState.class)
-                .subscribe(devicesViewState -> render(devicesViewState))
-                .dispose();
-    }
+                .list();
+        List<Device> devices = new ArrayList<>();
+        for (DeviceDB deviceDB: list) {
+            BleService.connect(this, deviceDB.getAddress());
+            devices.add(new Device(deviceDB));
+        }
 
-    private void updateDevices() {
-        render(new DevicesViewState.DataState(currentDevices));
+        currentDevices.clear();
+        currentDevices.addAll(devices);
+
+        render();
     }
 
     private void deviceConnect(String address, boolean connected) {
