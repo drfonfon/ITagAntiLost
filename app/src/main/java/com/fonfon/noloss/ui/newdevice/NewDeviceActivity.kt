@@ -7,27 +7,22 @@ import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Bundle
 import android.os.Handler
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import android.widget.Toast
 import com.fonfon.noloss.BleService
 import com.fonfon.noloss.R
-import com.fonfon.noloss.ui.LocationActivity
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationResult
 import kotlinx.android.synthetic.main.activity_new_device.*
 import java.util.*
 
-class NewDeviceActivity : LocationActivity() {
+class NewDeviceActivity : AppCompatActivity() {
 
   private var adapter: NewDevicesAdapter? = null
 
   private var bluetoothAdapter: BluetoothAdapter? = null
-
-  private var currentLocation: Location? = null
   private val currentAddresses = ArrayList<String?>()
 
   private val scanCallback = object : ScanCallback() {
@@ -71,13 +66,6 @@ class NewDeviceActivity : LocationActivity() {
     refresh.setOnRefreshListener({ refresh() })
 
     refresh()
-
-    locationCallback = object : LocationCallback() {
-      override fun onLocationResult(locationResult: LocationResult?) {
-        super.onLocationResult(locationResult)
-        currentLocation = locationResult!!.lastLocation
-      }
-    }
   }
 
   override fun onResume() {

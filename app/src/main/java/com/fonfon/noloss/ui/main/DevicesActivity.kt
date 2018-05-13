@@ -2,12 +2,12 @@ package com.fonfon.noloss.ui.main
 
 import android.content.Intent
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import com.fonfon.noloss.R
-import com.fonfon.noloss.ui.LocationActivity
 import com.fonfon.noloss.ui.newdevice.NewDeviceActivity
 import kotlinx.android.synthetic.main.activity_devices.*
 
-class DevicesActivity : LocationActivity(){
+class DevicesActivity : AppCompatActivity(){
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
