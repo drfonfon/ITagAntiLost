@@ -43,10 +43,6 @@
             android:name=".BleService"
             android:enabled="true"
             android:exported="false"/>
-        <service
-            android:name=".lib.LocationChangeService"
-            android:enabled="true"
-            android:exported="false"/>
 
         <receiver
             android:name=".lib.DeviceStatusBroadcastReceiver"

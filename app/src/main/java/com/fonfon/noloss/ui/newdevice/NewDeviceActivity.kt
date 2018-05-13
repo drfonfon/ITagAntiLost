@@ -10,19 +10,15 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
 import android.os.Handler
-import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import android.widget.Toast
 import com.fonfon.noloss.BleService
 import com.fonfon.noloss.R
-import com.fonfon.noloss.db.DbHelper
-import com.fonfon.noloss.db.DeviceDB
 import com.fonfon.noloss.ui.LocationActivity
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 import kotlinx.android.synthetic.main.activity_new_device.*
-import nl.qbusict.cupboard.CupboardFactory.cupboard
 import java.util.*
 
 class NewDeviceActivity : LocationActivity() {
@@ -37,21 +33,17 @@ class NewDeviceActivity : LocationActivity() {
   private val scanCallback = object : ScanCallback() {
     override fun onScanResult(callbackType: Int, result: ScanResult) {
       super.onScanResult(callbackType, result)
-      if (result.scanRecord != null) {
-        val uuids = result.scanRecord!!.serviceUuids
-        if (uuids != null) {
-          for (uuid in uuids) {
-            if (uuid.uuid == BleService.FIND_ME_SERVICE) {
-              if (!currentAddresses.contains(result.device.address))
-                renderDataState(result.device.address, result.scanRecord!!.deviceName)
-              break
-            }
+      result.scanRecord?.serviceUuids?.let { uuids->
+        for (uuid in uuids) {
+          if (uuid.uuid == BleService.FIND_ME_SERVICE) {
+            if (!currentAddresses.contains(result.device.address))
+              renderDataState(result.device.address, result.scanRecord!!.deviceName)
+            break
           }
         }
       }
     }
   }
-
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -59,7 +51,7 @@ class NewDeviceActivity : LocationActivity() {
 
     adapter = NewDevicesAdapter(object : NewDevicesAdapter.Listener {
       override fun onDevice(address: String, name: String?) {
-        cupboard().withDatabase(DbHelper.getConnection(this@NewDeviceActivity)).put(DeviceDB(address, name!!.trim { it <= ' ' }, currentLocation))
+        //add device
         finish()
       }
     })
@@ -76,7 +68,7 @@ class NewDeviceActivity : LocationActivity() {
 
     bluetoothAdapter = (getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
 
-    refresh.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener { this.refresh() })
+    refresh.setOnRefreshListener({ refresh() })
 
     refresh()
 
@@ -118,14 +110,6 @@ class NewDeviceActivity : LocationActivity() {
   }
 
   private fun refresh() {
-    val devices = cupboard()
-        .withDatabase(DbHelper.getConnection(this))
-        .query(DeviceDB::class.java)
-        .list()
-    val addresses = ArrayList<String?>()
-    devices.forEach{ addresses.add(it.address) }
-
-    currentAddresses.addAll(addresses)
     renderLoadingState(true)
     bluetoothAdapter!!.bluetoothLeScanner.startScan(scanCallback)
 

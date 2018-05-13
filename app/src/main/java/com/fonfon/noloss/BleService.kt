@@ -38,38 +38,30 @@ class BleService : Service() {
     private fun onConnected(gatt: BluetoothGatt) {
       gatt.discoverServices()
       bluetoothGatt[gatt.device.address] = BlePair(gatt)
-      sendBroadcast(
-          Intent(DEVICE_CONNECTED)
-              .putExtra(DEVICE_ADDRESS, gatt.device.address)
-      )
+      sendBroadcast(Intent(DEVICE_CONNECTED).putExtra(DEVICE_ADDRESS, gatt.device.address))
     }
 
     private fun onDisconnected(gatt: BluetoothGatt) {
       gatt.close()
-      val pair = bluetoothGatt[gatt.device.address]
-      if (pair != null) {
+      bluetoothGatt[gatt.device.address]?.let {
         bluetoothGatt.remove(gatt.device.address)
-        sendBroadcast(
-            Intent(DEVICE_DISCONNECTED)
-                .putExtra(DEVICE_ADDRESS, gatt.device.address)
-        )
+        sendBroadcast(Intent(DEVICE_DISCONNECTED).putExtra(DEVICE_ADDRESS, gatt.device.address))
       }
-      if (bluetoothGatt.size == 0) {
+      if (bluetoothGatt.isEmpty()) {
         stopSelf()
       }
     }
 
     override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-      gatt.services.forEach{
+      gatt.services.forEach {
         if (IMMEDIATE_ALERT_SERVICE == it.uuid) {
-          val pair = bluetoothGatt[gatt.device.address]
-          if (pair != null) {
-            pair.alertCharacteristic = getCharacteristic(
+          bluetoothGatt[gatt.device.address]?.let {
+            it.alertCharacteristic = getCharacteristic(
                 gatt,
                 IMMEDIATE_ALERT_SERVICE,
                 ALERT_LEVEL_CHARACTERISTIC
             )
-            gatt.readCharacteristic(pair.alertCharacteristic)
+            gatt.readCharacteristic(it.alertCharacteristic)
           }
         }
 
@@ -82,10 +74,7 @@ class BleService : Service() {
       }
     }
 
-    override fun onCharacteristicChanged(
-        gatt: BluetoothGatt,
-        characteristic: BluetoothGattCharacteristic
-    ) {
+    override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
       super.onCharacteristicChanged(gatt, characteristic)
       if (buttonCharacteristic!!.uuid == characteristic.uuid) {
         sendBroadcast(
