@@ -60,8 +60,8 @@ class BleService : Service() {
     }
 
     override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-      for (service in gatt.services) {
-        if (IMMEDIATE_ALERT_SERVICE == service.uuid) {
+      gatt.services.forEach{
+        if (IMMEDIATE_ALERT_SERVICE == it.uuid) {
           val pair = bluetoothGatt[gatt.device.address]
           if (pair != null) {
             pair.alertCharacteristic = getCharacteristic(
@@ -73,9 +73,9 @@ class BleService : Service() {
           }
         }
 
-        if (FIND_ME_SERVICE == service.uuid) {
-          if (!service.characteristics.isEmpty()) {
-            buttonCharacteristic = service.characteristics[0]
+        if (FIND_ME_SERVICE == it.uuid) {
+          if (!it.characteristics.isEmpty()) {
+            buttonCharacteristic = it.characteristics[0]
             setCharacteristicNotification(gatt, buttonCharacteristic!!, true)
           }
         }
@@ -218,13 +218,8 @@ class BleService : Service() {
     }
   }
 
-  private fun getCharacteristic(
-      bluetoothgatt: BluetoothGatt,
-      serviceUuid: UUID,
-      characteristicUuid: UUID
-  ): BluetoothGattCharacteristic? {
-    val service = bluetoothgatt.getService(serviceUuid)
-    return service?.getCharacteristic(characteristicUuid)
+  private fun getCharacteristic(bluetoothGatt: BluetoothGatt, serviceUuid: UUID, characteristicUuid: UUID): BluetoothGattCharacteristic {
+    return bluetoothGatt.getService(serviceUuid).getCharacteristic(characteristicUuid)
   }
 
   private fun immediateAlert(
@@ -233,7 +228,7 @@ class BleService : Service() {
   ) {
     if (address != null) {
       val pair = bluetoothGatt[address]
-      if (pair != null && pair.gatt != null && pair.alertCharacteristic != null) {
+      if (pair?.gatt != null && pair.alertCharacteristic != null) {
         pair.alertCharacteristic!!.setValue(alertValue, BluetoothGattCharacteristic.FORMAT_UINT8, 0)
         pair.gatt!!.writeCharacteristic(pair.alertCharacteristic)
       }
@@ -340,6 +335,8 @@ class BleService : Service() {
 
     val ALERT_STOP = 0
     val ALERT_START = 2
+
+    val GATT_MAX_CONNECTED_DEVICES = 15
   }
 
 }

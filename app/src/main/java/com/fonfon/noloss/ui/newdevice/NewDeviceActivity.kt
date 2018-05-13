@@ -90,11 +90,18 @@ class NewDeviceActivity : LocationActivity() {
 
   override fun onResume() {
     super.onResume()
-    resume()
+    if (bluetoothAdapter == null || !bluetoothAdapter!!.isEnabled) {
+      startActivityForResult(
+          Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE),
+          NewDeviceActivity.REQUEST_ENABLE_BT
+      )
+    } else {
+      refresh()
+    }
   }
 
   override fun onPause() {
-    pause()
+    bluetoothAdapter?.bluetoothLeScanner?.stopScan(scanCallback)
     super.onPause()
   }
 
@@ -110,35 +117,13 @@ class NewDeviceActivity : LocationActivity() {
     adapter!!.add(address, name!!)
   }
 
-  private fun resume() {
-    if (bluetoothAdapter == null || !bluetoothAdapter!!.isEnabled) {
-      startActivityForResult(
-          Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE),
-          NewDeviceActivity.REQUEST_ENABLE_BT
-      )
-    } else {
-      refresh()
-    }
-  }
-
-  private fun pause() {
-    if (bluetoothAdapter != null) {
-      val scanner = bluetoothAdapter!!.bluetoothLeScanner
-      if (scanner != null && scanCallback != null) {
-        scanner.stopScan(scanCallback)
-      }
-    }
-  }
-
   private fun refresh() {
     val devices = cupboard()
         .withDatabase(DbHelper.getConnection(this))
         .query(DeviceDB::class.java)
         .list()
     val addresses = ArrayList<String?>()
-    for (device in devices) {
-      addresses.add(device.address)
-    }
+    devices.forEach{ addresses.add(it.address) }
 
     currentAddresses.addAll(addresses)
     renderLoadingState(true)

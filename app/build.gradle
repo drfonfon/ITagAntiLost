@@ -11,10 +11,6 @@ android {
             storePassword 'BananaChocolate'
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
     compileSdkVersion 27
     buildToolsVersion '27.0.3'
     defaultConfig {
@@ -36,14 +32,12 @@ android {
 
 dependencies {
 
-    def supportVersion = '27.1.1'
-
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     testImplementation 'junit:junit:4.12'
 
-    implementation "com.android.support:design:$supportVersion"
+    implementation 'com.android.support:design:27.1.1'
     implementation 'com.google.android.gms:play-services-maps:15.0.1'
     implementation 'com.google.android.gms:play-services-location:15.0.1'
     implementation 'com.github.drfonfon:android-geohash:0.3'

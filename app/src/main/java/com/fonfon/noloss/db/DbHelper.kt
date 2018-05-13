@@ -18,8 +18,8 @@ class DbHelper private constructor(context: Context) : SQLiteOpenHelper(context,
 
   companion object {
 
-    private val DATABASE_NAME = "NoLoss.db"
-    private val DATABASE_VERSION = 1
+    private const val DATABASE_NAME = "NoLoss.db"
+    private const val DATABASE_VERSION = 1
 
     private var database: SQLiteDatabase? = null
 

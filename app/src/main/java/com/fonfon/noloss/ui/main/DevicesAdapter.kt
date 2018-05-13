@@ -1,9 +1,6 @@
 package com.fonfon.noloss.ui.main
 
 import android.content.Context
-import android.graphics.Color
-import android.support.v4.content.ContextCompat
-import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -17,8 +14,6 @@ internal class DevicesAdapter(context: Context, private val listener: DeviceAdap
 
   private val devices = ArrayList<Device>()
 
-  private val red = ContextCompat.getColor(context, R.color.mojo)
-  private val green = ContextCompat.getColor(context, R.color.fern)
   private val connected = context.getString(R.string.status_connected)
   private val disconnected = context.getString(R.string.status_disconnected)
 
@@ -29,20 +24,8 @@ internal class DevicesAdapter(context: Context, private val listener: DeviceAdap
   override fun onBindViewHolder(holder: DevicesAdapter.Holder, position: Int) {
     val device = devices[position]
 
-    holder.itemView.imageDevice.setImageResource(R.mipmap.ic_launcher)
-
-    val tintColor = if (device.isConnected) Color.BLACK else Color.WHITE
     holder.itemView.toolbar.title = device.name
-    holder.itemView.toolbar.setTitleTextColor(tintColor)
-
     holder.itemView.toolbar.subtitle = device.address
-    holder.itemView.toolbar.setSubtitleTextColor(tintColor)
-
-    holder.itemView.toolbar.setBackgroundColor(if (device.isConnected) green else red)
-
-    val moreIcon = ContextCompat.getDrawable(holder.itemView.toolbar.context, R.drawable.ic_more)
-    DrawableCompat.setTint(moreIcon!!, tintColor)
-    holder.itemView.toolbar.overflowIcon = moreIcon
 
     holder.itemView.viewStatus.isEnabled = device.isConnected
     holder.itemView.fabAlert.setImageResource(if (device.isAlerted) R.drawable.ic_volume_off else R.drawable.ic_volume_up)

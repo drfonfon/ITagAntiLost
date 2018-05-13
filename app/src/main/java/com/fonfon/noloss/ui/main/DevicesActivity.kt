@@ -48,7 +48,7 @@ import nl.qbusict.cupboard.CupboardFactory.cupboard
 
 class DevicesActivity : LocationActivity(), DevicesAdapter.DeviceAdapterListener {
 
-  internal var markerSize: Int = 0
+  private var markerSize: Int = 0
 
   private var adapter: DevicesAdapter? = null
 
@@ -95,16 +95,10 @@ class DevicesActivity : LocationActivity(), DevicesAdapter.DeviceAdapterListener
         }
 
     val behavior = BottomSheetBehavior.from(bottom_sheet)
-    text_total.setOnClickListener{
-      behavior.state = BottomSheetBehavior.STATE_EXPANDED
-    }
-    image_swipe_up.setOnClickListener{
-      behavior.state = BottomSheetBehavior.STATE_EXPANDED
-    }
+    text_total.setOnClickListener { behavior.state = BottomSheetBehavior.STATE_EXPANDED }
 
-    button_new_device.setOnClickListener { v -> startActivity(Intent(this, NewDeviceActivity::class.java)) }
-
-    button_refresh.setOnClickListener { v -> loadData() }
+    button_new_device.setOnClickListener { startActivity(Intent(this, NewDeviceActivity::class.java)) }
+    button_refresh.setOnClickListener { loadData() }
 
     locationCallback = object : LocationCallback() {
       override fun onLocationResult(locationResult: LocationResult?) {
@@ -139,11 +133,20 @@ class DevicesActivity : LocationActivity(), DevicesAdapter.DeviceAdapterListener
 
   override fun onResume() {
     super.onResume()
-    resume()
+    registerReceiver(receiver, IntentFilter(BleService.DEVICE_CONNECTED).apply {
+      addAction(BleService.DEVICE_DISCONNECTED)
+      addAction(LocationChangeService.LOCATION_CHANGED)
+    })
+    receiverRegistered = true
+    loadData()
   }
 
   override fun onPause() {
-    pause()
+    if (receiverRegistered) {
+      unregisterReceiver(receiver)
+      receiverRegistered = false
+    }
+    startService(Intent(this, BleService::class.java))
     super.onPause()
   }
 
@@ -164,7 +167,7 @@ class DevicesActivity : LocationActivity(), DevicesAdapter.DeviceAdapterListener
         .setView(edit)
         .setNegativeButton(android.R.string.cancel) { dialog, which -> dialog.dismiss() }
         .setPositiveButton(android.R.string.ok) { dialog, which ->
-          if (edit.text.toString().trim { it <= ' ' }.length > 0) {
+          if (edit.text.toString().trim { it <= ' ' }.isNotEmpty()) {
             device.name = edit.text.toString().trim { it <= ' ' }
             updateDevice(device)
           }
@@ -201,23 +204,6 @@ class DevicesActivity : LocationActivity(), DevicesAdapter.DeviceAdapterListener
           .snippet(device.address)
       )
     }
-  }
-
-  fun resume() {
-    val intentFilter = IntentFilter(BleService.DEVICE_CONNECTED)
-    intentFilter.addAction(BleService.DEVICE_DISCONNECTED)
-    intentFilter.addAction(LocationChangeService.LOCATION_CHANGED)
-    registerReceiver(receiver, intentFilter)
-    receiverRegistered = true
-    loadData()
-  }
-
-  fun pause() {
-    if (receiverRegistered) {
-      unregisterReceiver(receiver)
-      receiverRegistered = false
-    }
-    startService(Intent(this, BleService::class.java))
   }
 
   private fun loadData() {

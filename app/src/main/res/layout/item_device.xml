@@ -11,10 +11,9 @@
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="56dp"
         android:background="@color/zircon"
-        app:titleTextColor="@color/oil"
-        app:popupTheme="@style/AppTheme.PopupOverlay"/>
+        app:titleTextColor="@color/oil" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -25,13 +24,6 @@
         android:paddingBottom="@dimen/spacing_small"
         android:paddingStart="@dimen/spacing_small"
         android:paddingEnd="@dimen/spacing_normal">
-
-        <android.support.v7.widget.AppCompatImageView
-            android:id="@+id/imageDevice"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_gravity="center"
-            android:src="@mipmap/ic_launcher"/>
 
         <LinearLayout
             android:layout_width="wrap_content"

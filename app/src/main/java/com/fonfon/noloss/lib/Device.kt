@@ -41,7 +41,7 @@ class Device(deviceDB: DeviceDB) {
 
   companion object {
 
-    val ZERO_GEOHASH = "s00000000000"
+    const val ZERO_GEOHASH = "s00000000000"
 
     fun doHash(address: String): Long {
       var hash = 451
