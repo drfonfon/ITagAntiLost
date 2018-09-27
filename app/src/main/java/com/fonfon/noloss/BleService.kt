@@ -10,7 +10,7 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.IBinder
 import android.support.v4.app.NotificationCompat
-import com.fonfon.noloss.ui.main.DevicesActivity
+import com.fonfon.noloss.ui.MainActivity
 import java.util.*
 
 class BleService : Service() {
@@ -230,7 +230,7 @@ class BleService : Service() {
   }
 
   private fun getNotification(text: String): Notification {
-    val resultIntent = Intent(this, DevicesActivity::class.java)
+    val resultIntent = Intent(this, MainActivity::class.java)
     val resultPendingIntent = PendingIntent.getActivity(
         this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT
     )

@@ -1,32 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/spacing_small"
-    android:paddingEnd="@dimen/spacing_normal"
-    android:paddingStart="@dimen/spacing_normal"
+    android:background="?android:attr/selectableItemBackground"
     android:paddingTop="@dimen/spacing_small">
 
     <android.support.v7.widget.AppCompatTextView
         android:id="@+id/text_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/spacing_normal"
+        android:layout_marginStart="@dimen/spacing_normal"
         android:fontFamily="monospace"
         android:textColor="@color/oil"
         android:textSize="@dimen/text_size_large"
         android:textStyle="bold"
-        tools:text="name"/>
+        tools:text="name" />
 
     <android.support.v7.widget.AppCompatTextView
         android:id="@+id/text_address"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="@dimen/spacing_normal"
+        android:layout_marginStart="@dimen/spacing_normal"
         android:fontFamily="monospace"
         android:textColor="@color/oil"
         android:textSize="@dimen/text_size_small"
-        tools:text="AA:BB:CC:DDD"/>
+        tools:text="AA:BB:CC:DDD" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_gravity="bottom"
+        android:background="@color/mariner" />
 
 </LinearLayout>

@@ -8,18 +8,22 @@ import com.fonfon.noloss.R
 import kotlinx.android.synthetic.main.item_new_device.view.*
 import java.util.*
 
-internal class NewDevicesAdapter(private val listener: NewDevicesAdapter.Listener) : RecyclerView.Adapter<NewDevicesAdapter.Holder>() {
+internal class NewDevicesAdapter : RecyclerView.Adapter<NewDevicesAdapter.Holder>() {
 
-  private val devices = HashMap<String, String>()
+  val devices = HashMap<String, String>()
+  var onDevice = { address: String, name: String -> }
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = Holder(
       LayoutInflater.from(parent.context).inflate(R.layout.item_new_device, parent, false)
   )
 
   override fun onBindViewHolder(holder: Holder, position: Int) {
-    val addresses = devices.keys.toTypedArray()
-    holder.itemView.text_name.text = devices[addresses[position]]
-    holder.itemView.text_address.text = addresses[position]
+    devices.keys.toTypedArray().also {
+      holder.itemView.apply {
+        text_name.text = devices[it[position]]
+        text_address.text = it[position]
+      }
+    }
   }
 
   override fun getItemCount() = devices.size
@@ -38,19 +42,15 @@ internal class NewDevicesAdapter(private val listener: NewDevicesAdapter.Listene
 
     init {
       view.setOnClickListener {
-        if (adapterPosition != RecyclerView.NO_POSITION) {
-          val addresses = devices.keys.toTypedArray()
-          if (addresses.isNotEmpty()) {
-            listener.onDevice(addresses[adapterPosition], devices[addresses[adapterPosition]])
+        val addresses = devices.keys.toTypedArray()
+        if (RecyclerView.NO_POSITION != adapterPosition && addresses.isNotEmpty()) {
+          devices[addresses[adapterPosition]]?.let {
+            onDevice(addresses[adapterPosition], it)
           }
         }
       }
     }
 
-  }
-
-  internal interface Listener {
-    fun onDevice(address: String, name: String?)
   }
 }
 

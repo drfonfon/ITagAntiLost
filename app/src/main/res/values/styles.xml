@@ -4,7 +4,7 @@
         <item name="colorPrimary">@color/mariner</item>
         <item name="colorPrimaryDark">@color/mariner</item>
         <item name="colorAccent">@color/mojo</item>
-        <item name="android:navigationBarColor">@color/mariner</item>
+        <item name="android:windowTranslucentNavigation">true</item>
     </style>
 
 </resources>
